@@ -102,13 +102,16 @@ class ApplicativeTest extends FunSuite {
     Prop.run(law)
   }
 
-  test("Traverse") {
+  test("Traverse tree of lists") {
+    val smallTree: Tree[List[Int]] = Tree(List(1), List())
+    val tallTree: Tree[List[Int]] = Tree(List(1), List(Tree(List(2, 1), List(Tree(List(3, 2, 1), List())))))
+    val wideTree: Tree[List[Int]] = Tree(List(1), List(Tree(List(2, 1), List()), Tree(List(3, 2, 1), List())))
 
-    val tree: Tree[List[Int]] = Tree(List(1), List())
+    val result1: List[Tree[Int]] = Traverse.treeTraverse.sequence(smallTree)(List[Int]())
+    assert(result1 == List(Tree(1, List())))
 
-    val tmp: List[Tree[Int]] = Traverse.treeTraverse.sequence(tree)(List[Int]())
-
-    assert(tmp == "")
+    val result3: List[Tree[Int]] = Traverse.treeTraverse.sequence(wideTree)(List[Int]())
+    assert(result3 == List(Tree(1, List(Tree(2, List()), Tree(3, List())))))
   }
 
 }
