@@ -30,7 +30,7 @@ class MonoidTest extends FunSuite {
   }
 
   test("testOptionMonoid") {
-    val optionGenerator = Gen.optionOf(Gen.int)
+    val optionGenerator = Gen.chapter4OptionOf(Gen.int)
     Prop.run(Monoid.Laws.identityLaw(Monoid.optionMonoid[Int])(optionGenerator))
     Prop.run(Monoid.Laws.associativeLaw(Monoid.optionMonoid[Int])(optionGenerator))
 
@@ -52,8 +52,8 @@ class MonoidTest extends FunSuite {
   }
 
   test("testOrderedMonoid") {
-    Prop.run(Monoid.Laws.identityLaw(Monoid.orderedMonoid)(Gen.optionOf(Gen.int)))
-    Prop.run(Monoid.Laws.associativeLaw(Monoid.orderedMonoid)(Gen.optionOf(Gen.int)))
+    Prop.run(Monoid.Laws.identityLaw(Monoid.orderedMonoid)(Gen.chapter4OptionOf(Gen.int)))
+    Prop.run(Monoid.Laws.associativeLaw(Monoid.orderedMonoid)(Gen.chapter4OptionOf(Gen.int)))
   }
 
   test("productMonoid") {

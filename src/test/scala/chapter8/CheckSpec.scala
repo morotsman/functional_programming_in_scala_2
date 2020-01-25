@@ -207,11 +207,10 @@ class CheckSpec extends FlatSpec with Matchers {
 
   "false and false" should "should be falsified" in {
     val rng: RNG = SimpleRNG(10)
-    val trueGenerator = Gen.unit(true);
     val falseGenerator = Gen.unit(false);
     val prop = Prop.forAll(falseGenerator)(a => a) && Prop.forAll(falseGenerator)(a => a)
     val result = prop.run(1, 1, rng)
-    assert(result == Falsified("false;false", 0))
+    assert(result == Falsified("[false]", 0))
   }
 
   "42 || 43" should "pass 42 or 43" in {
@@ -235,7 +234,7 @@ class CheckSpec extends FlatSpec with Matchers {
     val generator = Gen.unit(44);
     val prop = Prop.forAll(generator)(a => a == 43) || Prop.forAll(generator)(a => a == 42)
     val result = prop.run(1, 1, rng)
-    assert(result == Falsified("44;44", 0))
+    assert(result == Falsified("44", 0))
   }
 
   "listOf(0)" should "generate an empty list" in {

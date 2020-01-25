@@ -1,6 +1,7 @@
 package chapter12
 
 import chapter11.Functor
+import chapter4.{Option, Some, None}
 import chapter4.{Either, Left, Right}
 import chapter8.{Gen, Prop}
 import chapter3.{Cons, List, Nil}

@@ -1,10 +1,10 @@
 package chapter12
 
-import chapter11.{Functor, OptionFunctor}
 import org.scalatest.FunSuite
 import chapter4.{Either, Left, Right}
 import chapter8.{Gen, Prop}
 import chapter3.{Cons, List, Nil}
+import chapter4.Option
 
 class ApplicativeTest extends FunSuite {
 
@@ -97,7 +97,7 @@ class ApplicativeTest extends FunSuite {
   }
 
   test("Applicative laws") {
-    val generator: Gen[Option[Int]] = Gen.optionOf(Gen.int)
+    val generator: Gen[Option[Int]] = Gen.chapter4OptionOf(Gen.int)
     val law = Applicative.laws(Applicative.optionApplicative)(generator)
     Prop.run(law)
   }

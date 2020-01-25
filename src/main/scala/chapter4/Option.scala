@@ -30,6 +30,11 @@ sealed trait Option[+A] {
     case None => None
     case Some(a) => f(a)
   }
+
+  def isDefined() : Boolean = this match {
+    case None => false
+    case _ => true
+  }
 }
 
 object Option {

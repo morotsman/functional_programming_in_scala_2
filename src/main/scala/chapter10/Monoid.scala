@@ -1,5 +1,6 @@
 package chapter10
 
+import chapter4.{Option, None, Some}
 import chapter8.{Gen, Prop}
 
 trait Monoid[A] {

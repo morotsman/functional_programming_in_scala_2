@@ -1,5 +1,6 @@
 package chapter11
 
+import chapter4.Option
 import chapter8.{Gen, Prop, SGen}
 
 trait Functor[F[_]] {
