@@ -1,8 +1,18 @@
 package chapter3
 
+import chapter12.Applicative
+
 import scala.annotation.tailrec
 
-sealed trait List[+A] {
+sealed trait List[+A] extends Applicative[List]{
+
+
+  override def map2[A, B, C](fa: List[A], fb: List[B])(f: (A, B) => C): List[C] =  (fa, fb) match {
+    case (Cons(a, tla), Cons(b, tlb)) => Cons(f(a,b), map2(tla, tlb)(f))
+    case _ => Nil
+  }
+
+  override def unit[A](a: => A): List[A] = Cons(a, Nil)
 
   def tail(): List[A] = this match {
     case Nil => Nil
@@ -117,6 +127,9 @@ case object Nil extends List[Nothing]
 case class Cons[+A](head: A, override val tail: List[A]) extends List[A]
 
 object List {
+
+  def fill[A](n: Int)(elem: => A): List[A] =
+    if (n == 0) Nil else Cons(elem, fill(n-1)(elem))
 
 
   def apply[A](as: A*): List[A] =

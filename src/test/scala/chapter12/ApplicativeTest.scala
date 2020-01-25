@@ -4,13 +4,14 @@ import chapter11.{Functor, OptionFunctor}
 import org.scalatest.FunSuite
 import chapter4.{Either, Left, Right}
 import chapter8.{Gen, Prop}
+import chapter3.{Cons, List, Nil}
 
 class ApplicativeTest extends FunSuite {
 
   val listMonad = new Monad2[List] {
     override def flatMap[A, B](fa: List[A])(f: A => List[B]): List[B] = fa match {
       case Nil => Nil
-      case x :: xs => f(x) ++ flatMap(xs)(f)
+      case Cons(x, xs) => f(x).append(flatMap(xs)(f))
     }
 
     override def unit[A](a: => A): List[A] = List(a)
@@ -22,7 +23,7 @@ class ApplicativeTest extends FunSuite {
 
   test("streamApplicative") {
     val result: Stream[List[Int]] = Applicative.streamApplicative.sequence(List(Stream.continually(1), Stream.continually(2)))
-    assert(result.take(3).toList == List(List(1, 2), List(1, 2), List(1, 2)))
+    assert(result.take(3).toList.toString == "List(Cons(1,Cons(2,Nil)), Cons(1,Cons(2,Nil)), Cons(1,Cons(2,Nil)))")
   }
 
   test("eitherMonad") {
@@ -99,6 +100,15 @@ class ApplicativeTest extends FunSuite {
     val generator: Gen[Option[Int]] = Gen.optionOf(Gen.int)
     val law = Applicative.laws(Applicative.optionApplicative)(generator)
     Prop.run(law)
+  }
+
+  test("Traverse") {
+
+    val tree: Tree[List[Int]] = Tree(List(1), List())
+
+    val tmp: List[Tree[Int]] = Traverse.treeTraverse.sequence(tree)(List[Int]())
+
+    assert(tmp == "")
   }
 
 }
