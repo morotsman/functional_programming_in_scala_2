@@ -14,7 +14,7 @@ case class Success[A](a: A) extends Validation[Nothing, A]
 
 object Applicative {
 
-  val streamApplicative = new Applicative[Stream] {
+  implicit val streamApplicative = new Applicative[Stream] {
     override def map2[A, B, C](fa: Stream[A], fb: Stream[B])(f: (A, B) => C): Stream[C] =
       fa.zip(fb).map(a => f(a._1, a._2))
 
@@ -22,7 +22,7 @@ object Applicative {
       Stream.continually(a)
   }
 
-  val listApplicative = new Applicative[List] {
+  implicit val listApplicative = new Applicative[List] {
     override def map2[A, B, C](fa: List[A], fb: List[B])(f: (A, B) => C): List[C] = (fa, fb) match {
       case (Cons(a, tla), Cons(b, tlb)) => Cons(f(a, b), map2(tla, tlb)(f))
       case _ => Nil
@@ -31,18 +31,27 @@ object Applicative {
     override def unit[A](a: => A): List[A] = List(a)
   }
 
-  val optionApplicative = new Applicative[Option] {
+  implicit def eitherApplicative[L] = new Applicative[({type f[r] = Either[L, r]})#f] {
+    override def map2[A, B, C](fa: Either[L, A], fb: Either[L, B])(f: (A, B) => C): Either[L, C] = (fa, fb) match {
+      case (Right(r1), Right(r2)) => Right(f(r1, r2))
+      case (Left(l), _) => Left(l)
+      case (_, Left(l)) => Left(l)
+    }
+
+    override def unit[A](a: => A): Either[L, A] = Right(a)
+  }
+
+  implicit val optionApplicative = new Applicative[Option] {
     override def map2[A, B, C](fa: Option[A], fb: Option[B])(f: (A, B) => C): Option[C] = (fa, fb) match {
       case (Some(a), Some(b)) => Some(f(a, b))
       case _ => None
     }
 
-
     override def unit[A](a: => A): Option[A] =
       Some(a)
   }
 
-  def validationApplicative[E] = new Applicative[({type f[x] = Validation[E, x]})#f] {
+  implicit def validationApplicative[E]() = new Applicative[({type f[x] = Validation[E, x]})#f] {
     override def map2[A, B, C](fa: Validation[E, A], fb: Validation[E, B])(f: (A, B) => C): Validation[E, C] = (fa, fb) match {
       case (Success(a), Success(b)) => Success(f(a, b))
       case (Success(a), Failure(hd, tl)) => Failure(hd, tl)
@@ -134,8 +143,9 @@ trait Applicative[F[_]] extends Functor[F] {
       def unit[A](a: => A) = (self.unit(a), G.unit(a))
 
       override def map2[A, B, C](fa: (F[A], G[A]), fb: (F[B], G[B]))(f: (A, B) => C): (F[C], G[C]) = {
-        val cf = curry(f)
-        apply(map(fa)(cf))(fb)
+        val fc: F[C] = self.map2(fa._1, fb._1)(f)
+        val gc: G[C] = G.map2(fa._2, fb._2)(f)
+        (fc, gc)
       }
     }
   }
@@ -143,11 +153,8 @@ trait Applicative[F[_]] extends Functor[F] {
   def compose[G[_]](G: Applicative[G]): Applicative[({type f[x] = F[G[x]]})#f] = {
     val self = this
     new Applicative[({type f[x] = F[G[x]]})#f] {
-      override def map2[A, B, C](fa: F[G[A]], fb: F[G[B]])(f: (A, B) => C): F[G[C]] = {
-        val cf = curry(f)
-        val fgbc: F[G[B => C]] = map(fa)(cf)
-        apply(fgbc)(fb)
-      }
+      override def map2[A, B, C](fga: F[G[A]], fgb: F[G[B]])(f: (A, B) => C): F[G[C]] =
+        self.map2(fga, fgb)((ga, gb) => G.map2(ga,gb)(f))
 
       override def unit[A](a: => A): F[G[A]] =
         self.unit(G.unit(a))

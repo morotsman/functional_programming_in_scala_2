@@ -4,7 +4,7 @@ import org.scalatest.FunSuite
 import chapter4.{Either, Left, Right}
 import chapter8.{Gen, Prop}
 import chapter3.{Cons, List, Nil}
-import chapter4.Option
+import chapter4.{Option, Some, None}
 
 class ApplicativeTest extends FunSuite {
 
@@ -102,16 +102,73 @@ class ApplicativeTest extends FunSuite {
     Prop.run(law)
   }
 
-  test("Traverse tree of lists") {
+  test("applicative compose"){
+    val optionList = Applicative.optionApplicative.compose(Applicative.listApplicative)
+    val result = optionList.map(Some(List(1,2,3)))(a => a + 5)
+    assert(result == Some(List(6)))
+  }
+
+  test("applicative product"){
+    val optionList = Applicative.optionApplicative.product(Applicative.listApplicative)
+    val result = optionList.map((Some(1), List(2, 3, 4)))(a => a + 6)
+    assert(result == (Some(7), List(8)))
+  }
+
+  test("Sequence tree of lists") {
     val smallTree: Tree[List[Int]] = Tree(List(1), List())
     val tallTree: Tree[List[Int]] = Tree(List(1), List(Tree(List(2, 1), List(Tree(List(3, 2, 1), List())))))
     val wideTree: Tree[List[Int]] = Tree(List(1), List(Tree(List(2, 1), List()), Tree(List(3, 2, 1), List())))
 
-    val result1: List[Tree[Int]] = Traverse.treeTraverse.sequence(smallTree)(List[Int]())
+    val result1: List[Tree[Int]] = Traverse.treeTraverse.sequence(smallTree)
     assert(result1 == List(Tree(1, List())))
 
-    val result3: List[Tree[Int]] = Traverse.treeTraverse.sequence(wideTree)(List[Int]())
-    assert(result3 == List(Tree(1, List(Tree(2, List()), Tree(3, List())))))
+    val result2: List[Tree[Int]] = Traverse.treeTraverse.sequence(tallTree)
+    assert(result2 == List(Tree(1, List(Tree(2, List(Tree(3, List())))))))
+
+    val result3: List[Tree[Int]] = Traverse.treeTraverse.sequence(wideTree)
+    assert(result3 == List(Tree(1, Cons(Tree(2, List()), List(Tree(3, List()))))))
   }
 
+  test("Sequence tree of option") {
+    val smallTree: Tree[Option[Int]] = Tree(Some(1), List())
+    val tallTree: Tree[Option[Int]] = Tree(Some(1), List(Tree(Some(2), List(Tree(Some(3), List())))))
+    val wideTree: Tree[Option[Int]] = Tree(Some(1), List(Tree(Some(2), List()), Tree(Some(3), List())))
+    val treeWithNone: Tree[Option[Int]] = Tree(Some(1), List(Tree(Some(2), List()), Tree(None, List())))
+
+    val result1: Option[Tree[Int]] = Traverse.treeTraverse.sequence(smallTree)
+    assert(result1 == Some(Tree(1, List())))
+
+    val result2: Option[Tree[Int]] = Traverse.treeTraverse.sequence(tallTree)
+    assert(result2 == Some(Tree(1, List(Tree(2, List(Tree(3, List())))))))
+
+    val result3: Option[Tree[Int]] = Traverse.treeTraverse.sequence(wideTree)
+    assert(result3 == Some(Tree(1, Cons(Tree(2, List()), List(Tree(3, List()))))))
+
+    val result4: Option[Tree[Int]] = Traverse.treeTraverse.sequence(treeWithNone)
+    assert(result4 == None)
+  }
+
+  test("Traverse list of option") {
+    val T = Traverse.listTraverse
+
+    val result1: Option[List[Int]] = T.traverse(List(1, 2, 3))(a => Some(a): Option[Int])(Applicative.optionApplicative)
+    assert(result1 == Some(List(1, 2, 3)))
+
+    val result2: Option[List[Int]] = T.traverse(List(1, 2, -1, 3))(a => if (a >= 0) Some(a) else None)
+    assert(result2 == None)
+  }
+
+  test("Traverse list of validation") {
+    val T = Traverse.listTraverse
+
+    def positve(value: Int): Validation[Exception, Int] =
+      if (value >= 0) Success(value) else Failure(new RuntimeException(value + " is less then zero"))
+
+    type VE[A] = Validation[Exception, A]
+    val result1 = T.traverse(List(1, 2, 3))(a => positve(a): VE[Int])(Applicative.validationApplicative())
+    assert(result1 == Success(List(1, 2, 3)))
+
+    val result2 = T.traverse(List(1, -2, -3))(a => positve(a): VE[Int])(Applicative.validationApplicative())
+    assert(result2.toString == "Failure(java.lang.RuntimeException: -2 is less then zero,Vector(java.lang.RuntimeException: -3 is less then zero))")
+  }
 }

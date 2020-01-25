@@ -4,15 +4,8 @@ import chapter12.Applicative
 
 import scala.annotation.tailrec
 
-sealed trait List[+A] extends Applicative[List]{
+sealed trait List[+A] {
 
-
-  override def map2[A, B, C](fa: List[A], fb: List[B])(f: (A, B) => C): List[C] =  (fa, fb) match {
-    case (Cons(a, tla), Cons(b, tlb)) => Cons(f(a,b), map2(tla, tlb)(f))
-    case _ => Nil
-  }
-
-  override def unit[A](a: => A): List[A] = Cons(a, Nil)
 
   def tail(): List[A] = this match {
     case Nil => Nil
