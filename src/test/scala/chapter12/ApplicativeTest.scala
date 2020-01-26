@@ -289,4 +289,19 @@ class ApplicativeTest extends FunSuite {
     val result2 = T.traverse(List(1, -2, -3))(a => positve(a): VE[Int])(Applicative.validationApplicative())
     assert(result2.toString == "Failure(java.lang.RuntimeException: -2 is less then zero,Vector(java.lang.RuntimeException: -3 is less then zero))")
   }
+
+  test("idApplicative unit") {
+    val A = Applicative.idApplicative
+    assert(A.unit(1).run() == 1)
+  }
+
+  test("idApplicative map2") {
+    val A = Applicative.idApplicative
+    assert(A.map2(Id(() => 1), Id(() => 2))((a, b) => (a, b)).run() == (1, 2))
+  }
+
+  test("traverse map") {
+    val T = Traverse.listTraverse
+    assert(T.map(List(1, 2, 3))(a => a) == List(1, 2, 3))
+  }
 }

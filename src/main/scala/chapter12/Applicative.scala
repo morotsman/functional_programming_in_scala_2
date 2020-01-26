@@ -15,6 +15,13 @@ case class Success[A](a: A) extends Validation[Nothing, A]
 
 object Applicative {
 
+  implicit val idApplicative = new Applicative[Id] {
+    override def map2[A, B, C](fa: Id[A], fb: Id[B])(f: (A, B) => C): Id[C] =
+      Id(() => f(fa.run(), fb.run()))
+
+    override def unit[A](a: => A): Id[A] = Id(() => a)
+  }
+
   implicit val streamApplicative = new Applicative[Stream] {
     override def map2[A, B, C](fa: Stream[A], fb: Stream[B])(f: (A, B) => C): Stream[C] =
       fa.zip(fb).map(a => f(a._1, a._2))
@@ -155,7 +162,7 @@ trait Applicative[F[_]] extends Functor[F] {
     val self = this
     new Applicative[({type f[x] = F[G[x]]})#f] {
       override def map2[A, B, C](fga: F[G[A]], fgb: F[G[B]])(f: (A, B) => C): F[G[C]] =
-        self.map2(fga, fgb)((ga, gb) => G.map2(ga,gb)(f))
+        self.map2(fga, fgb)((ga, gb) => G.map2(ga, gb)(f))
 
       override def unit[A](a: => A): F[G[A]] =
         self.unit(G.unit(a))
@@ -223,15 +230,19 @@ object Monad2 {
   }
 }
 
+case class Id[A](run: () => A)
+
 trait Traverse[F[_]] {
   def traverse[M[_] : Applicative, A, B](fa: F[A])(f: A => M[B]): M[F[B]]
 
   def sequence[G[_] : Applicative, A](fga: F[G[A]]): G[F[A]] =
     traverse(fga)(ga => ga)
+
+  def map[A, B](fa: F[A])(f: A => B): F[B] =
+    traverse(fa)(a => Applicative.idApplicative.unit(f(a))).run()
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])
-
 
 object Traverse {
 
