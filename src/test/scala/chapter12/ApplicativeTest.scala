@@ -90,6 +90,42 @@ class ApplicativeTest extends FunSuite {
     assert((A.map2(Failure("one"), Failure("two"))((a, b) => (a, b))).toString == Failure("one", Vector("two")).toString)
   }
 
+  test("option") {
+    val A = Applicative.optionApplicative
+    assert(A.map(A.unit(1))(a => a) == A.unit(1))
+  }
+
+  test("traverse") {
+    val A = Applicative.optionApplicative
+    assert(A.traverse(List(1, 2))(a => Some(a)) == Some(List(1, 2)))
+    assert(A.traverse(List(1, 2))(a => None) == None)
+    assert(A.traverse(List())(_ => None) == Some(List()))
+  }
+
+  test("sequence") {
+    val A = Applicative.optionApplicative
+    assert(A.sequence(List(Some(1))) == Some(List(1)))
+    assert(A.sequence(List(Some(1), Some(2), Some(3))) == Some(List(1, 2, 3)))
+    assert(A.sequence(List(Some(1), Some(2), None)) == None)
+  }
+
+  test("sequenceMap") {
+    val A = Applicative.optionApplicative
+    assert(A.sequenceMap(Map(1 -> Some(1))) == Some(Map(1 -> 1)))
+    assert(A.sequenceMap(Map(1 -> None)) == None)
+  }
+
+  test("replicateM") {
+    val A = Applicative.optionApplicative
+    assert(A.replicateM(2, Some(2)) == Some(List(2, 2)))
+  }
+
+  test("product") {
+    val A = Applicative.optionApplicative
+    assert(A.product(Some(1), Some(2)) == Some((1, 2)))
+    assert(A.product(Some(1), None) == None)
+    assert(A.product(None, Some(2)) == None)
+  }
 
   test("eitherMonad usage") {
     val F = Monad2.eitherMonad[Exception]
@@ -177,6 +213,23 @@ class ApplicativeTest extends FunSuite {
     val optionList = Applicative.optionApplicative.product(Applicative.listApplicative)
     val result = optionList.map((Some(1), List(2, 3, 4)))(a => a + 6)
     assert(result == (Some(7), List(8)))
+  }
+
+  test("apply") {
+    val A = Applicative.optionApplicative
+    assert(A.apply(Some[Int => Int](a => a))(Some(1)) == Some(1))
+  }
+
+  test("map3") {
+    val A = Applicative.optionApplicative
+    assert(A.map3(Some(1), Some(2), Some(3))((a, b, c) => (1, 2, 3)) == Some(1, 2, 3))
+    assert(A.map3(Some(1), Some(2), None)((a, b, c) => (1, 2, 3)) == None)
+  }
+
+  test("map4") {
+    val A = Applicative.optionApplicative
+    assert(A.map4(Some(1), Some(2), Some(3), Some(4))((a, b, c, d) => (1, 2, 3, 4)) == Some(1, 2, 3, 4))
+    assert(A.map4(Some(1), Some(2), None, Some(4))((a, b, c, d) => (1, 2, 3, 4)) == None)
   }
 
   test("Sequence tree of lists") {

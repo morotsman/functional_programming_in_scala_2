@@ -58,6 +58,11 @@ sealed trait List[+A] {
     case Cons(x, xs) => xs.foldLeft(f(x,z))(f)
   }
 
+  def forEach(f: A => Unit): Unit = this match {
+    case Nil =>
+    case Cons(a, as) => f(a); as.forEach(f)
+  }
+
   def reverse(): List[A] = {
 
     def go(acc: List[A], as: List[A]): List[A] = as match {
