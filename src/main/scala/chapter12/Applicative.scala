@@ -5,6 +5,7 @@ import chapter4.{Option, Some, None}
 import chapter4.{Either, Left, Right}
 import chapter8.{Gen, Prop}
 import chapter3.{Cons, List, Nil}
+import chapter5.Stream
 
 sealed trait Validation[+E, +A]
 

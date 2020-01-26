@@ -5,6 +5,7 @@ import chapter4.{Either, Left, Right}
 import chapter8.{Gen, Prop}
 import chapter3.{Cons, List, Nil}
 import chapter4.{Option, Some, None}
+import chapter5.Stream
 
 class ApplicativeTest extends FunSuite {
 
@@ -25,6 +26,70 @@ class ApplicativeTest extends FunSuite {
     val result: Stream[List[Int]] = Applicative.streamApplicative.sequence(List(Stream.continually(1), Stream.continually(2)))
     assert(result.take(3).toList.toString == "List(Cons(1,Cons(2,Nil)), Cons(1,Cons(2,Nil)), Cons(1,Cons(2,Nil)))")
   }
+
+  test("streamApplicative unit") {
+    assert(Applicative.streamApplicative.unit(1).take(3).toList == Stream(1, 1, 1).toList)
+  }
+
+  test("streamApplicative map2") {
+    val s1 = Applicative.streamApplicative.unit(1)
+    val s2 = Applicative.streamApplicative.unit(2)
+    val A = Applicative.streamApplicative
+    assert(A.map2(s1, s2)((a, b) => (a, b)).take(3).toList == Stream((1, 2), (1, 2), (1, 2)).toList)
+  }
+
+  test("listApplicative unit") {
+    val A = Applicative.listApplicative
+    assert(A.unit(1) == List(1))
+  }
+
+  test("listApplicative map2") {
+    val A = Applicative.listApplicative
+    assert(A.map2(List(1, 2), List(2, 3))((a, b) => (a, b)) == List((1, 2), (2, 3)))
+    assert(A.map2(List(1, 2), List(2))((a, b) => (a, b)) == List((1, 2)))
+    assert(A.map2(List(1), List(2, 3))((a, b) => (a, b)) == List((1, 2)))
+    assert(A.map2(List(), List(2, 3))((a, b) => (a, b)) == List())
+  }
+
+  test("eitherApplicative unit") {
+    val A = Applicative.eitherApplicative[Exception]
+    assert(A.unit(1) == Right(1))
+  }
+
+  test("eitherApplicative map2") {
+    val A = Applicative.eitherApplicative[String]
+    assert(A.map2(Right(1), Right(2))((a, b) => (a, b)) == Right((1, 2)))
+    assert(A.map2(Left("one"), Right(2))((a, b) => (a, b)) == Left("one"))
+    assert(A.map2(Left("one"), Left("two"))((a, b) => (a, b)) == Left("one"))
+    assert(A.map2(Right(1), Left("two"))((a, b) => (a, b)) == Left("two"))
+  }
+
+  test("optionApplicative unit") {
+    val A = Applicative.optionApplicative
+    assert(A.unit(1) == Some(1))
+  }
+
+  test("optionApplicative map2") {
+    val A = Applicative.optionApplicative
+    assert(A.map2(Some(1), Some(2))((a, b) => (a, b)) == Some((1, 2)))
+    assert(A.map2(Some(1), None)((a, b) => (a, b)) == None)
+    assert(A.map2(None, None)((a, b) => (a, b)) == None)
+    assert(A.map2(None, Some(2))((a, b) => (a, b)) == None)
+  }
+
+  test("validationApplicative unit") {
+    val A = Applicative.validationApplicative[String]()
+    assert(A.unit(1) == Success(1))
+  }
+
+  test("validationApplicative map2") {
+    val A = Applicative.validationApplicative[String]()
+    assert(A.map2(Success(1), Success(2))((a, b) => (a, b)) == Success((1, 2)))
+    assert((A.map2(Failure("one"), Success(2))((a, b) => (a, b))).toString == Failure("one").toString)
+    assert((A.map2(Success(1), Failure("two"))((a, b) => (a, b))).toString == Failure("two").toString)
+    assert((A.map2(Failure("one"), Failure("two"))((a, b) => (a, b))).toString == Failure("one", Vector("two")).toString)
+  }
+
 
   test("eitherMonad usage") {
     val F = Monad2.eitherMonad[Exception]
@@ -66,7 +131,7 @@ class ApplicativeTest extends FunSuite {
     assert(map2Result == Right("Niklas Leopold"))
 
 
-    val map3Result = F.map3(validateFirstName(""), lastName, age)((f, l, a) => f + " " + l + " is " + a + " years old.")
+    val map3Result = F.map3(validateFirstName(""), validateLastName(""), age)((f, l, a) => f + " " + l + " is " + a + " years old.")
     assert(map3Result.toString == Left(new RuntimeException("First name is missing")).toString)
 
   }
