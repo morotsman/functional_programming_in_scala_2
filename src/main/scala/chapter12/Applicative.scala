@@ -1,7 +1,8 @@
 package chapter12
 
+import chapter10.{Foldable, Monoid}
 import chapter11.Functor
-import chapter4.{Option, Some, None}
+import chapter4.{None, Option, Some}
 import chapter4.{Either, Left, Right}
 import chapter8.{Gen, Prop}
 import chapter3.{Cons, List, Nil}
@@ -14,6 +15,14 @@ case class Failure[E](head: E, tail: Vector[E] = Vector()) extends Validation[E,
 case class Success[A](a: A) extends Validation[Nothing, A]
 
 object Applicative {
+
+  type Const[M, B] = M
+
+  implicit def monoidApplicative[M](M: Monoid[M]) = new Applicative[({type f[x] = Const[M, x]})#f] {
+    override def map2[A, B, C](m1: M, m2: M)(f: (A, B) => C): M = M.op(m1, m2)
+
+    override def unit[A](a: => A): M = M.zero
+  }
 
   implicit val idApplicative = new Applicative[Id] {
     override def map2[A, B, C](fa: Id[A], fb: Id[B])(f: (A, B) => C): Id[C] =
@@ -232,7 +241,9 @@ object Monad2 {
 
 case class Id[A](run: () => A)
 
-trait Traverse[F[_]] {
+trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
+  type Const[M, B] = M
+
   def traverse[M[_] : Applicative, A, B](fa: F[A])(f: A => M[B]): M[F[B]]
 
   def sequence[G[_] : Applicative, A](fga: F[G[A]]): G[F[A]] =
@@ -240,6 +251,9 @@ trait Traverse[F[_]] {
 
   def map[A, B](fa: F[A])(f: A => B): F[B] =
     traverse(fa)(a => Applicative.idApplicative.unit(f(a))).run()
+
+  override def foldMap[A, M](as: F[A])(f: A => M)(mb: Monoid[M]): M =
+    traverse[({type f[x] = Const[M, x]})#f, A, Nothing](as)(f)(Applicative.monoidApplicative(mb))
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])

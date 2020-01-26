@@ -134,6 +134,8 @@ object List {
     if (as.isEmpty) Nil
     else Cons(as.head, apply(as.tail: _*))
 
+  def fromScalaList[A](as: scala.List[A]): List[A] = ???
+
   def concat[A](lists: List[List[A]]): List[A] =
     lists.reverse().foldLeft(Nil: List[A])((acc,b) => acc.append(b))
 
