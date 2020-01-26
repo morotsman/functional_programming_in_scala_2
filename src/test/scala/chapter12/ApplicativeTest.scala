@@ -26,7 +26,7 @@ class ApplicativeTest extends FunSuite {
     assert(result.take(3).toList.toString == "List(Cons(1,Cons(2,Nil)), Cons(1,Cons(2,Nil)), Cons(1,Cons(2,Nil)))")
   }
 
-  test("eitherMonad") {
+  test("eitherMonad usage") {
     val F = Monad2.eitherMonad[Exception]
 
     def validateFirstName(name: String): Either[Exception, String] =
@@ -71,7 +71,7 @@ class ApplicativeTest extends FunSuite {
 
   }
 
-  test("validationApplicative") {
+  test("validationApplicative usage") {
     val F = Applicative.validationApplicative[Exception]
 
     def validateFirstName(name: String): Validation[Exception, String] =
@@ -102,13 +102,13 @@ class ApplicativeTest extends FunSuite {
     Prop.run(law)
   }
 
-  test("applicative compose"){
+  test("applicative compose") {
     val optionList = Applicative.optionApplicative.compose(Applicative.listApplicative)
-    val result = optionList.map(Some(List(1,2,3)))(a => a + 5)
+    val result = optionList.map(Some(List(1, 2, 3)))(a => a + 5)
     assert(result == Some(List(6)))
   }
 
-  test("applicative product"){
+  test("applicative product") {
     val optionList = Applicative.optionApplicative.product(Applicative.listApplicative)
     val result = optionList.map((Some(1), List(2, 3, 4)))(a => a + 6)
     assert(result == (Some(7), List(8)))
