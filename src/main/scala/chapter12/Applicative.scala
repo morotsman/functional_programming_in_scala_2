@@ -270,19 +270,22 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
   def traverseS[S,A,B](fa: F[A])(f: A => State[S, B]): State[S, F[B]] =
     traverse[({type f[x] = State[S, x]})#f, A, B](fa)(f)(Monad2.stateMonad)
 
-  def zipWthIndex[A](ta: F[A]): F[(A, Int)] = {
+  def zipWthIndex2[A](ta: F[A]): F[(A, Int)] = {
     val result: State[Int, F[(A, Int)]] = traverseS(ta)(a => State({(i: Int) => ((a, i), i + 1)}))
     result.run(0)._1
   }
 
-  def zipWthIndex2[A](ta: F[A]): F[(A, Int)] = {
+  def zipWthIndex[A](ta: F[A]): F[(A, Int)] =
     traverseS(ta)((a: A) => (for (
       i <- get[Int];
       _ <- set(1 + i)
     ) yield (a, i))).run(0)._1
+
+  /*
+  override def toList[A](fa: F[A]): List[A] = {
+    ???
   }
-
-
+   */
 
 }
 

@@ -1,10 +1,7 @@
 package chapter10
 
-import chapter10.FoldableList.foldMap
 import chapter3.{Branch, Leaf, Tree}
 import chapter4.{None, Option, Some}
-
-import scala.annotation.tailrec
 
 trait Foldable[F[_]] {
   def foldMap[A, B](as: F[A])(f: A => B)(mb: Monoid[B]): B
