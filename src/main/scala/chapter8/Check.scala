@@ -1,5 +1,6 @@
 package chapter8
 
+import chapter3.{Cons, List}
 import chapter5.Stream
 import chapter6.{RNG, SimpleRNG, State}
 import chapter8.Gen.unit
@@ -162,7 +163,7 @@ object Gen {
     as.flatMap(a => bs.map(b => f(a, b)))
 
   def sequence[A](as: List[Gen[A]]): Gen[List[A]] =
-    as.foldLeft(unit(List[A]()))((a, acc) => map2(a, acc)((aa, bb) => bb :: aa))
+    as.foldLeft(unit(List[A]()))((a, acc) => map2(a, acc)((aa, bb) => Cons(bb, aa)))
 
   def sequence[A](as: Stream[Gen[A]]): Gen[Stream[A]] =
     as.foldRight(unit(Stream[A]()))((acc, a) => map2(a, acc)((aa, bb) => Stream.cons(bb, aa)))

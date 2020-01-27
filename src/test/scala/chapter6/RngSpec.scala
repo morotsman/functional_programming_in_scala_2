@@ -1,13 +1,14 @@
 package chapter6
 
 import org.scalatest._
+import chapter3.List
 
 class RNGSpec extends FlatSpec with Matchers {
 
   case class NotSoRandom(results: List[Int]) extends RNG {
 
     def nextInt: (Int, RNG) = {
-      (results.head, NotSoRandom(results.tail))
+      (results.getHead(), NotSoRandom(results.tail))
     }
   }
 

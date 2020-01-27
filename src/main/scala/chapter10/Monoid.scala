@@ -1,5 +1,6 @@
 package chapter10
 
+import chapter3.List
 import chapter4.{Option, None, Some}
 import chapter8.{Gen, Prop}
 
@@ -150,7 +151,7 @@ object Monoid {
   }
 
   def listMonoid[A] = new Monoid[List[A]] {
-    override def op(a1: List[A], a2: List[A]): List[A] = a1 ++ a2
+    override def op(a1: List[A], a2: List[A]): List[A] = a1.append(a2)
 
     override def zero: List[A] = List()
   }

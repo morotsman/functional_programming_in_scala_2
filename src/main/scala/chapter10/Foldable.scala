@@ -1,6 +1,7 @@
 package chapter10
 
 import chapter3.{Branch, Leaf, Tree}
+import chapter3.{List, Cons, Nil}
 import chapter4.{None, Option, Some}
 
 trait Foldable[F[_]] {
@@ -34,13 +35,13 @@ trait Foldable[F[_]] {
     foldLeft(as)(m.zero)(m.op)
 
   def toList[A](as: F[A]): List[A] =
-    foldRight(as)(List[A]())((a, b) => a :: b)
+    foldRight(as)(List[A]())((a, b) => Cons(a, b))
 }
 
 object FoldableList extends Foldable[List] {
   override def foldMap[A, B](as: List[A])(f: A => B)(mb: Monoid[B]): B = as match {
     case Nil => mb.zero
-    case (a :: as) => mb.op(f(a), foldMap(as)(f)(mb))
+    case Cons(a, as) => mb.op(f(a), foldMap(as)(f)(mb))
   }
 }
 

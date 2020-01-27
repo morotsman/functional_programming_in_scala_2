@@ -1,5 +1,6 @@
 package chapter8
 
+import chapter3.List
 import chapter6.{RNG, SimpleRNG, State}
 import org.scalatest._
 
@@ -261,7 +262,7 @@ class CheckSpec extends FlatSpec with Matchers {
   "the usablity of the framework" should "be acceptable 2" in {
     val smallInt = Gen.choose(-10, 10)
     val sortedProp = Prop.forAll(Gen.listOf(smallInt)) { ns =>
-      val nss = ns.sorted
+      val nss = ns.toScalaList().sorted
 
       // We specify that every sorted list is either empty, has one element,
       // or has no two consecutive elements `(a,b)` such that `a` is greater than `b`.
@@ -279,7 +280,7 @@ class CheckSpec extends FlatSpec with Matchers {
   "the usablity of the framework" should "be acceptable 1" in {
     val smallInt = Gen.choose(-10, 10)
     val maxProp = Prop.forAll(Gen.listOf1(smallInt)) { ns =>
-      val max = ns.max
+      val max = ns.toScalaList().max
       !ns.exists(_ > max)
     }
     Prop.run(maxProp)

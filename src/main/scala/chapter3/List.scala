@@ -20,7 +20,7 @@ sealed trait List[+A] {
   @tailrec
   final def drop(n: Int): List[A] = (this, n) match {
     case (_, c) if c == 0 => this
-    case (Nil , _) => this
+    case (Nil, _) => this
     case (Cons(a, as), _) => as.drop(n - 1)
   }
 
@@ -44,18 +44,18 @@ sealed trait List[+A] {
   def append[B >: A](bs: List[B]): List[B] = (this, bs) match {
     case (Nil, xs) => xs
     case (as, Nil) => as
-    case (Cons(a,as), Cons(x, xs)) => Cons(a,as.append(bs))
+    case (Cons(a, as), Cons(x, xs)) => Cons(a, as.append(bs))
   }
 
   def appendInTermsOfFoldRight[B >: A](bs: List[B]): List[B] =
     foldRight(bs)((a, bs) => Cons(a, bs))
 
   def length(): Int =
-    this.foldRight(0)((a,b) => b + 1)
+    this.foldRight(0)((a, b) => b + 1)
 
-  def foldLeft[B](z: B)(f: (A, B) => B): B = this match {
+  def foldLeft[B](z: B)(f: (B, A) => B): B = this match {
     case Nil => z
-    case Cons(x, xs) => xs.foldLeft(f(x,z))(f)
+    case Cons(x, xs) => xs.foldLeft(f(z, x))(f)
   }
 
   def forEach(f: A => Unit): Unit = this match {
@@ -74,10 +74,10 @@ sealed trait List[+A] {
   }
 
   def foldLeftInTermOfFoldRight[B](z: B)(f: (A, B) => B): B =
-    this.reverse().foldRight(z)((a, b) => f(a,b))
+    this.reverse().foldRight(z)((a, b) => f(a, b))
 
   final def foldRightInTermOfFoldLeft[B](z: B)(f: (A, B) => B): B =
-    this.reverse().foldLeft(z)((a,b) => f(a,b))
+    this.reverse().foldLeft(z)((a, b) => f(b, a))
 
   def map[B](f: A => B): List[B] = this match {
     case Nil => Nil
@@ -101,11 +101,11 @@ sealed trait List[+A] {
   def zipWith[B, C](list: List[B])(f: (A, B) => C): List[C] = (this, list) match {
     case (Nil, bs) => Nil
     case (as, Nil) => Nil
-    case (Cons(a, as), Cons(b, bs)) => Cons(f(a,b), as.zipWith(bs)(f))
+    case (Cons(a, as), Cons(b, bs)) => Cons(f(a, b), as.zipWith(bs)(f))
   }
 
   def startsWith[B](bs: List[B]): Boolean = (this, bs) match {
-    case (Nil,Nil) => true
+    case (Nil, Nil) => true
     case (Nil, _) => false
     case (_, Nil) => true
     case (Cons(a, as), Cons(b, bs)) if (a == b) => as.startsWith(bs)
@@ -116,27 +116,82 @@ sealed trait List[+A] {
     case (Nil, Nil) => true
     case (_, Nil) => true
     case (Nil, _) => false
-    case (Cons(a,as), _) => if(this.startsWith(bs)) true else as.hasSubsequence(bs)
+    case (Cons(a, as), _) => if (this.startsWith(bs)) true else as.hasSubsequence(bs)
+  }
+
+  def mkString(separator: String): String =
+    foldRight("")((a, b) => a.toString + separator + b)
+
+  def toScalaList(): scala.List[A] = this match {
+    case Nil => scala.List()
+    case Cons(a, as) => a :: as.toScalaList()
+  }
+
+  def getHead(): A = this match {
+    case Cons(a, as) => a
+    case Nil => throw new RuntimeException("Head of empty list")
+  }
+
+  def forall(f: A => Boolean): Boolean = this match {
+    case Cons(a, as) if f(a) => as.forall(f)
+    case Cons(a, as) if !f(a) => false
+    case _ => true
+  }
+
+  def exists(f: A => Boolean): Boolean = this match {
+    case Nil => false
+    case Cons(a, _) if f(a) => true
+    case Cons(a, as) => as.exists(f)
+  }
+
+  def size(): Int = this match {
+    case Nil => 0
+    case Cons(a, as) => 1 + as.size()
+  }
+
+  def isEmpty(): Boolean = this match {
+    case Nil => true
+    case _ => false
+  }
+
+  def zip[B](lb: List[B]): List[(A, B)] = (this, lb) match {
+    case (Cons(a, as), Cons(b, bs)) => Cons((a, b), as.zip(bs))
+  }
+
+  def contains[B >: A](aToFind: B): Boolean = this match {
+    case Nil => false
+    case Cons(a, as) if a == aToFind => true
+    case Cons(a, as) => as.contains(aToFind)
+  }
+
+  def takeWhile(f: A => Boolean): List[A] = this match {
+    case Nil => Nil
+    case Cons(a, _) if !f(a) => Nil
+    case Cons(a, as) => Cons(a, as.takeWhile(f))
   }
 
 }
 
 case object Nil extends List[Nothing]
+
 case class Cons[+A](head: A, override val tail: List[A]) extends List[A]
 
 object List {
 
   def fill[A](n: Int)(elem: => A): List[A] =
-    if (n == 0) Nil else Cons(elem, fill(n-1)(elem))
+    if (n == 0) Nil else Cons(elem, fill(n - 1)(elem))
 
 
   def apply[A](as: A*): List[A] =
     if (as.isEmpty) Nil
     else Cons(as.head, apply(as.tail: _*))
 
-  def fromScalaList[A](as: scala.List[A]): List[A] = ???
+  def fromScalaList[A](as: scala.List[A]): List[A] = as match {
+    case a :: as => Cons(a, fromScalaList(as))
+    case _ => Nil
+  }
 
   def concat[A](lists: List[List[A]]): List[A] =
-    lists.reverse().foldLeft(Nil: List[A])((acc,b) => acc.append(b))
+    lists.foldLeft(Nil: List[A])((acc, b) => acc.append(b))
 
 }

@@ -17,7 +17,6 @@ class EitherSpec  extends FlatSpec with Matchers{
     assert(isLeft(Either.Try(4/0).map(_+1))  == true)
   }
 
-
   "Either.Try(4/2).flatMap(v => Either.Try(6/v))" should "result in Right(3)" in {
     assert(Either.Try(4/2).flatMap(v => Either.Try(6/v))  == Right(3))
   }

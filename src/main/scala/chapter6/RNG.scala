@@ -1,5 +1,6 @@
 package chapter6
 
+import chapter3.{Cons, List}
 
 trait RNG {
 
@@ -27,15 +28,15 @@ object RNG {
   val char: Rand[Char] =
     map(between(97, 122))(i => i.toChar)
 
-  private def charsToString(chars: List[Char]): String = chars.mkString
+  private def charsToString(chars: List[Char]): String = chars.mkString("")
 
   val string: Rand[String] = {
-    val chars: Rand[List[Char]]= flatMap(between(0, 20))(i => sequence(List.fill(i)(char)))
+    val chars: Rand[List[Char]] = flatMap(between(0, 20))(i => sequence(List.fill(i)(char)))
     map(chars)(charsToString)
   }
 
   val sentence: Rand[String] = {
-    val words = flatMap(between(0,20))(i => sequence(List.fill(i)(string)))
+    val words = flatMap(between(0, 20))(i => sequence(List.fill(i)(string)))
     map(words)(w => w.mkString(" "))
   }
 
@@ -84,7 +85,7 @@ object RNG {
       if (c == 0) (acc, rng)
       else {
         val (i, rng2) = rng.nextInt
-        go(c - 1, i :: acc, rng2)
+        go(c - 1, Cons(i, acc), rng2)
       }
 
     go(count, List(), rng)
@@ -92,7 +93,7 @@ object RNG {
 
   def between(start: Int, stopExclusive: Int)(rng: RNG): (Int, RNG) = {
     val (result, rng2) = double(rng)
-    val value = start + (result*(stopExclusive-start)).toInt
+    val value = start + (result * (stopExclusive - start)).toInt
     (value.toInt, rng2)
   }
 
@@ -113,7 +114,7 @@ object RNG {
     }
 
   def sequence[A](as: List[Rand[A]]): Rand[List[A]] =
-    as.foldRight(unit(List[A]()))((a, acc) => map2(a, acc)((aa, bb) => aa :: bb))
+    as.foldRight(unit(List[A]()))((a, acc) => map2(a, acc)((aa, bb) => Cons(aa, bb)))
 
   def intsInTermsOfSequence(n: Int): Rand[List[Int]] =
     sequence(List.fill(n)(int))
@@ -165,7 +166,7 @@ object State {
   def unit[S, A](a: A): State[S, A] = State(s => (a, s))
 
   def sequence[S, A](as: List[State[S, A]]): State[S, List[A]] =
-    as.foldRight(State.unit(List()): State[S, List[A]])((a, b) => b.map2(a)((aa, bb) => bb :: aa))
+    as.foldRight(State.unit(List()): State[S, List[A]])((a, b) => b.map2(a)((aa, bb) => Cons(bb, aa)))
 
   def get[S]: State[S, S] = State(s => (s, s))
 

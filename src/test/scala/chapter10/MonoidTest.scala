@@ -1,6 +1,6 @@
 package chapter10
 
-import chapter6.{RNG, State}
+import chapter3.List
 import chapter8.{Gen, Prop}
 import org.scalatest.FunSuite
 
@@ -63,33 +63,36 @@ class MonoidTest extends FunSuite {
 
   test("ordered") {
     val sortedProp = Prop.forAll(Gen.listOf(Gen.choose(-5,5)))(l => {
-      Monoid.ordered(l.sorted) == true
+      val sortedList = List.fromScalaList(l.toScalaList().sorted)
+      Monoid.ordered(sortedList)
     })
-    Prop.run(sortedProp, maxSize = 20, testCases = 1000)
+    Prop.run(sortedProp, maxSize = 20, testCases = 100)
 
 
     val prop = Prop.forAll(Gen.listOf(Gen.choose(-5,5)))(l => {
-      Monoid.ordered(l) == (l == l.sorted)
+      val sortedList = List.fromScalaList(l.toScalaList().sorted)
+      Monoid.ordered(l) == (l == sortedList)
     })
     Prop.run(prop, maxSize = 20, testCases = 1000)
   }
 
   test("foldMapV") {
     val prop = Prop.forAll(Gen.listOf(Gen.choose(0,8)))(l => {
-      Monoid.foldMapV(l.toIndexedSeq, Monoid.intAddition)(a => a) == l.sum
+      Monoid.foldMapV(l.toScalaList().toIndexedSeq, Monoid.intAddition)(a => a) == l.toScalaList().sum
     })
     Prop.run(prop)
   }
 
   test("orderedV") {
     val sortedProp = Prop.forAll(Gen.listOf(Gen.choose(-5,5)))(l => {
-      Monoid.orderedV(l.sorted.toIndexedSeq) == true
+      Monoid.orderedV(l.toScalaList().sorted.toIndexedSeq)
     })
     Prop.run(sortedProp, testCases = 1000, maxSize = 20)
 
     val prop = Prop.forAll(Gen.listOf(Gen.choose(-5,5)))(l => {
-      val isSorted = l == l.sorted
-      Monoid.orderedV(l.toIndexedSeq) == isSorted
+      val sortedList = List.fromScalaList(l.toScalaList().sorted)
+      val isSorted = l == sortedList
+      Monoid.orderedV(l.toScalaList().toIndexedSeq) == isSorted
     })
     Prop.run(prop, testCases = 1000, maxSize = 20)
   }
@@ -103,10 +106,15 @@ class MonoidTest extends FunSuite {
 
   test("wordCount") {
     val sortedProp = Prop.forAll(Gen.sentence())(s => {
-      if (s == "") {
+      if (s.trim == "") {
         Monoid.wordCound(s) == 0
       } else {
-        Monoid.wordCound(s) == s.trim.replaceAll(" +", " ").split(" ").size
+        val result = Monoid.wordCound(s) == s.trim.replaceAll(" +", " ").split(" ").size
+        if(!result) {
+          println(Monoid.wordCound(s) + " " + s.trim.replaceAll(" +", " ").split(" ").size)
+          println("[" + s + "]")
+        }
+        result
       }
     })
     Prop.run(sortedProp, testCases = 1000, maxSize = 20)

@@ -1,5 +1,6 @@
 package chapter11
 
+import chapter3.List
 import chapter4.Option
 import chapter8.{Gen, Prop, SGen}
 
