@@ -1,12 +1,14 @@
 package chapter12
 
 import chapter10.{Foldable, Monoid}
-import chapter11.Functor
+import chapter11.{Functor, Monad}
 import chapter4.{None, Option, Some}
 import chapter4.{Either, Left, Right}
 import chapter8.{Gen, Prop}
 import chapter3.{Cons, List, Nil}
 import chapter5.Stream
+import chapter6.State
+import State._
 
 sealed trait Validation[+E, +A]
 
@@ -237,6 +239,14 @@ object Monad2 {
     override def unit[A](a: => A): Either[E, A] =
       Right(a)
   }
+
+  def stateMonad[S] = new Monad2[({type lambda[x] = State[S, x]})#lambda] {
+    override def flatMap[A, B](fa: State[S, A])(f: A => State[S, B]): State[S, B] =
+      fa flatMap f
+
+    override def unit[A](a: => A): State[S, A] = State(s => (a, s))
+
+  }
 }
 
 case class Id[A](run: () => A)
@@ -254,6 +264,26 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
 
   override def foldMap[A, M](as: F[A])(f: A => M)(mb: Monoid[M]): M =
     traverse[({type f[x] = Const[M, x]})#f, A, Nothing](as)(f)(Applicative.monoidApplicative(mb))
+
+
+
+  def traverseS[S,A,B](fa: F[A])(f: A => State[S, B]): State[S, F[B]] =
+    traverse[({type f[x] = State[S, x]})#f, A, B](fa)(f)(Monad2.stateMonad)
+
+  def zipWthIndex[A](ta: F[A]): F[(A, Int)] = {
+    val result: State[Int, F[(A, Int)]] = traverseS(ta)(a => State({(i: Int) => ((a, i), i + 1)}))
+    result.run(0)._1
+  }
+
+  def zipWthIndex2[A](ta: F[A]): F[(A, Int)] = {
+    traverseS(ta)((a: A) => (for (
+      i <- get[Int];
+      _ <- set(1 + i)
+    ) yield (a, i))).run(0)._1
+  }
+
+
+
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])

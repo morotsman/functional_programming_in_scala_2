@@ -304,4 +304,18 @@ class ApplicativeTest extends FunSuite {
     val T = Traverse.listTraverse
     assert(T.map(List(1, 2, 3))(a => a) == List(1, 2, 3))
   }
+
+  test("zipWithIndex2") {
+    val T = Traverse.listTraverse
+    val list = List("a", "b", "c")
+    val expected = List(("a", 0), ("b", 1), ("c", 2))
+    assert(T.zipWthIndex2(list) == expected)
+  }
+
+  test("zipWithIndex") {
+    val T = Traverse.listTraverse
+    val list = List("a", "b", "c")
+    val expected = List(("a", 0), ("b", 1), ("c", 2))
+    assert(T.zipWthIndex(list) == expected)
+  }
 }
