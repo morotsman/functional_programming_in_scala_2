@@ -318,4 +318,35 @@ class ApplicativeTest extends FunSuite {
     val expected = List(("a", 0), ("b", 1), ("c", 2))
     assert(T.zipWthIndex(list) == expected)
   }
+
+  test("Option.toList") {
+    val T = Traverse.optionTraverse
+    assert(T.toList(Some(1)) == List(1))
+  }
+
+  test("Tree.toList") {
+    val smallTree: Tree[Int] = Tree(1, List())
+    val tallTree: Tree[Int] = Tree(1, List(Tree(2, List(Tree(3, List())))))
+    val wideTree: Tree[Int] = Tree(1, List(Tree(2, List()), Tree(3, List())))
+    val T = Traverse.treeTraverse
+    assert(T.toList(smallTree) == List(1))
+    assert(T.toList(tallTree) == List(1, 2, 3))
+    assert(T.toList(wideTree) == List(1, 2, 3))
+  }
+
+  test("Option.reverse") {
+    val T = Traverse.optionTraverse
+    assert(T.reverse(Some(1)) == Some(1))
+    assert(T.reverse(None) == None)
+  }
+
+  test("Tree.reverse") {
+    val smallTree: Tree[Int] = Tree(1, List())
+    val tallTree: Tree[Int] = Tree(1, List(Tree(2, List(Tree(3, List())))))
+    val wideTree: Tree[Int] = Tree(1, List(Tree(2, List()), Tree(3, List())))
+    val T = Traverse.treeTraverse
+    assert(T.reverse(smallTree) == Tree(1,List()))
+    assert(T.reverse(tallTree) == Tree(3, List(Tree(2, List(Tree(1, List()))))))
+    assert(T.reverse(wideTree) == Tree(3, List(Tree(2, List()), Tree(1, List()))))
+  }
 }

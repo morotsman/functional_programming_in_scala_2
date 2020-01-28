@@ -266,12 +266,11 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
     traverse[({type f[x] = Const[M, x]})#f, A, Nothing](as)(f)(Applicative.monoidApplicative(mb))
 
 
-
-  def traverseS[S,A,B](fa: F[A])(f: A => State[S, B]): State[S, F[B]] =
+  def traverseS[S, A, B](fa: F[A])(f: A => State[S, B]): State[S, F[B]] =
     traverse[({type f[x] = State[S, x]})#f, A, B](fa)(f)(Monad2.stateMonad)
 
   def zipWthIndex2[A](ta: F[A]): F[(A, Int)] = {
-    val result: State[Int, F[(A, Int)]] = traverseS(ta)(a => State({(i: Int) => ((a, i), i + 1)}))
+    val result: State[Int, F[(A, Int)]] = traverseS(ta)(a => State({ (i: Int) => ((a, i), i + 1) }))
     result.run(0)._1
   }
 
@@ -281,11 +280,28 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
       _ <- set(1 + i)
     ) yield (a, i))).run(0)._1
 
-  /*
-  override def toList[A](fa: F[A]): List[A] = {
-    ???
-  }
-   */
+  override def toList[A](fa: F[A]): List[A] =
+    traverseS(fa)((a: A) => (for {
+      as <- get[List[A]]
+      _ <- set(Cons(a, as): List[A])
+    } yield ())).run(List[A]())._2.reverse()
+
+  def mapAccum[S, A, B](fa: F[A], s: S)(f: (A, S) => (B, S)): (F[B], S) =
+    traverseS(fa)((a: A) => (for {
+      s1 <- get[S]
+      (b, s2) = f(a, s1)
+      _ <- set(s2)
+    } yield b)).run(s)
+
+  def toListInTermsOfMapAccum[A](fa: F[A]): List[A] =
+    mapAccum(fa, List[A]())((a, s) => ((), Cons(a, s)))._2.reverse()
+
+  def zipWithIndexInTermsOfMapAccum[A](fa: F[A]): F[(A, Int)] =
+    mapAccum(fa, 0)((a, s) => ((a, s), s + 1))._1
+
+  def reverse[A](fa: F[A]): F[A] =
+    mapAccum(fa, toList(fa).reverse)((_, as) => (as.getHead(), as.tail))._1
+
 
 }
 

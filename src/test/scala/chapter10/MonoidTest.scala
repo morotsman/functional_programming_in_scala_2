@@ -109,12 +109,7 @@ class MonoidTest extends FunSuite {
       if (s.trim == "") {
         Monoid.wordCound(s) == 0
       } else {
-        val result = Monoid.wordCound(s) == s.trim.replaceAll(" +", " ").split(" ").size
-        if(!result) {
-          println(Monoid.wordCound(s) + " " + s.trim.replaceAll(" +", " ").split(" ").size)
-          println("[" + s + "]")
-        }
-        result
+        Monoid.wordCound(s) == s.trim.replaceAll(" +", " ").split(" ").size
       }
     })
     Prop.run(sortedProp, testCases = 1000, maxSize = 20)
