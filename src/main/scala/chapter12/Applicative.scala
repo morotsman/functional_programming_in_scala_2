@@ -302,7 +302,33 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
   def reverse[A](fa: F[A]): F[A] =
     mapAccum(fa, toList(fa).reverse)((_, as) => (as.getHead(), as.tail))._1
 
+  override def foldLeft[A, B](fa: F[A])(z: B)(f: (B, A) => B): B =
+    mapAccum(fa, z)((a, s) => {
+      val b = f(s, a)
+      (b, b)
+    })._2
 
+  def zip[A, B](fa: F[A], fb: F[B]): F[(A, B)] =
+    (mapAccum(fa, toList(fb)) {
+      case (a, Nil) => sys.error("zip: Incompatible shapes")
+      case (a, Cons(b, bs)) => ((a, b), bs)
+    })._1
+
+  def zipL[A, B](fa: F[A], fb: F[B]): F[(A, Option[B])] =
+    (mapAccum(fa, toList(fb)) {
+      case (a, Nil) => ((a, None: Option[B]), Nil)
+      case (a, Cons(b, bs)) => ((a, Some(b)), bs)
+    })._1
+
+  def zipR[A, B](fa: F[A], fb: F[B]): F[(Option[A], B)] =
+    (mapAccum(fb, toList(fa)) {
+      case (b, Nil) => ((None: Option[A], b), Nil)
+      case (b, Cons(a, as)) => ((Some(a), b), as)
+    })._1
+
+  def fuse[G[_], H[_], A, B](fa: F[A])(f: A => G[B], g: A => H[B])(G: Applicative[G], H: Applicative[H]): (G[F[B]], H[F[B]]) = {
+    ???
+  }
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])

@@ -345,8 +345,16 @@ class ApplicativeTest extends FunSuite {
     val tallTree: Tree[Int] = Tree(1, List(Tree(2, List(Tree(3, List())))))
     val wideTree: Tree[Int] = Tree(1, List(Tree(2, List()), Tree(3, List())))
     val T = Traverse.treeTraverse
-    assert(T.reverse(smallTree) == Tree(1,List()))
+    assert(T.reverse(smallTree) == Tree(1, List()))
     assert(T.reverse(tallTree) == Tree(3, List(Tree(2, List(Tree(1, List()))))))
     assert(T.reverse(wideTree) == Tree(3, List(Tree(2, List()), Tree(1, List()))))
+  }
+
+  test("foldRight") {
+    val T = Traverse.listTraverse
+    val prop = Prop.forAll(Gen.listOf(Gen.int))(l => {
+      T.foldLeft(l)(List[Int]())((b, a) => Cons(a, b)) == l.reverse
+    })
+    Prop.run(prop, testCases = 100)
   }
 }
