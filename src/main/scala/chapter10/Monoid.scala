@@ -226,7 +226,6 @@ object Monoid {
 
     def identityLaw[A](m: Monoid[A])(in: Gen[A]): Prop =
       Prop.forAll(in)(a => {
-        println(a)
         m.op(m.zero, a) == a
       })
   }

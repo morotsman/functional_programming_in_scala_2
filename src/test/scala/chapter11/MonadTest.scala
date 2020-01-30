@@ -114,7 +114,7 @@ class MonadTest extends FunSuite {
       ((1, ticket.numberOfMatches), ticket)
     })).run(lotteryTicket)
 
-    println(result)
+    assert(result == (List((1,1), (1,2), (1,3), (1,4), (1,5), (1,6), (1,7)),LotteryTicket(List(1, 6, 5, 23, 45, 27),7)))
 
 
     def getState[S]: State[S, S] = State(s => (s, s))
@@ -148,7 +148,6 @@ class MonadTest extends FunSuite {
     val context = Context("one", "two")
 
     val test = Reader((c: Context) => {
-      //println(c)
     })
 
     readerMonad.sequence(List(test, test)).run(context)
