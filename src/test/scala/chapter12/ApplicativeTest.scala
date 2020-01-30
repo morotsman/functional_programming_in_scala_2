@@ -1,10 +1,11 @@
 package chapter12
 
+import chapter10.Monoid
 import org.scalatest.FunSuite
 import chapter4.{Either, Left, Right}
 import chapter8.{Gen, Prop}
 import chapter3.{Cons, List, Nil}
-import chapter4.{Option, Some, None}
+import chapter4.{None, Option, Some}
 import chapter5.Stream
 
 class ApplicativeTest extends FunSuite {
@@ -356,5 +357,30 @@ class ApplicativeTest extends FunSuite {
       T.foldLeft(l)(List[Int]())((b, a) => Cons(a, b)) == l.reverse
     })
     Prop.run(prop, testCases = 100)
+  }
+
+  test("fuse") {
+    val T = Traverse.listTraverse
+    val list = List(1, 2, 3, 4, 5, 6)
+    val result = T.traverse(list)(a => Some(a): Option[Int])
+    assert(result == Some(list))
+
+    def lessThenFour(number: Int): Option[Int] = if (number < 4) Some(number) else None
+    val result2 = T.fuse(list)(a => Some(a): Option[Int], a => lessThenFour(a))
+    assert(result2 == (Some(list), None))
+
+    val result3 = T.foldMap(list)(a => a)(Monoid.intAddition)
+    assert(result3 == 21)
+
+    val sumProd = Monoid.productMonoid(Monoid.intAddition, Monoid.intMultiplication)
+    val result4 = T.foldMap(list)(a => (a, a))(sumProd)
+    assert(result4 == (21, 720))
+
+    val sumLength = Monoid.productMonoid(Monoid.intAddition, Monoid.intAddition)
+    val result5 = T.foldMap(list)(a => (a, 1))(sumLength)
+    assert(result5 == (21, 6))
+
+    val result6 = T.foldMap(List[Int]())(a => (a, 1))(sumLength)
+    assert(result6 == (0, 0))
   }
 }
