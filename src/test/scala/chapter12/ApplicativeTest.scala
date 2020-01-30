@@ -391,4 +391,70 @@ class ApplicativeTest extends FunSuite {
     val result = tmp.foldMap(List(Some(1), Some(2), Some(3)))(a => a)(Monoid.intAddition)
     assert(result == 6)
   }
+
+  test("traverse compose 2") {
+    val lT: Traverse[List] = Traverse.listTraverse
+    val oT: Traverse[Option] = Traverse.optionTraverse
+    val tT: Traverse[Tree] = Traverse.treeTraverse
+    val tmp = lT.compose(oT).compose(tT)
+    val structure = List(
+      Some(
+        Tree(1, List())
+      ),
+      Some(
+        Tree(2, List(
+          Tree(3, List())
+        ))
+      )
+    )
+
+    val result = tmp.foldMap(structure)(a => a)(Monoid.intAddition)
+    assert(result == 6)
+
+    val result2 = tmp.traverse(structure)(a => Some(a): Option[Int])
+    assert(result2 == Some(structure))
+  }
+
+  test("traverse compose 3") {
+    val mT = Traverse.mapTraverse[String]
+    val lT = Traverse.listTraverse
+    val traverser = mT.compose(lT)
+
+    object Role extends Enumeration {
+      type Role = Value
+      val Manager, Developer, ScrumMaster, ProductOwner = Value
+    }
+    import Role._
+
+    case class Person(firstName: String, lastName: String, salery: Int, role: Role)
+
+    val structure = Map[String, List[Person]](
+      "dep1" -> List(
+          Person("Some", "Manager", 100000, Manager),
+          Person("Some", "Developer", 20000, Developer),
+          Person("Some", "Developer", 15000, Developer),
+          Person("Some", "Developer", 25000, Developer),
+          Person("Some", "Developer", 20000, Developer),
+          Person("Some", "ScrumMaster", 70000, ScrumMaster),
+          Person("Some", "ProductOwner", 80000, ProductOwner)
+      ),
+      "dep2" -> List(
+        Person("Some", "Manager", 150000, Manager),
+        Person("Some", "Developer", 20000, Developer),
+        Person("Some", "Developer", 15000, Developer),
+        Person("Some", "Developer", 25000, Developer),
+        Person("Some", "Developer", 20000, Developer),
+        Person("Some", "ScrumMaster", 100000, ScrumMaster),
+        Person("Some", "ProductOwner", 110000, ProductOwner)
+    ))
+
+    val totalSalery = traverser.foldMap(structure)(a => a.salery)(Monoid.intAddition)
+    assert(totalSalery == 770000)
+
+    val maxSalery = traverser.foldMap(structure)(a => a.salery)(new Monoid[Int] {
+      override def op(a1: Int, a2: Int): Int = a1 max a2
+      override def zero: Int = 0
+    })
+    assert(maxSalery == 150000)
+  }
 }

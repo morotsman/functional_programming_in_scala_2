@@ -113,4 +113,9 @@ object Traverse {
     override def traverse[M[_], A, B](ta: Tree[A])(f: A => M[B])(implicit M: Applicative[M]): M[Tree[B]] =
       M.map2(f(ta.head), listTraverse.traverse(ta.tail)(a => traverse(a)(f)))(Tree(_, _))
   }
+
+  def mapTraverse[K] = new Traverse[({type f[v] = Map[K,v]})#f] {
+    override def traverse[M[_], A, B](fa: Map[K, A])(f: A => M[B])(implicit M: Applicative[M]): M[Map[K, B]] =
+      fa.foldRight(M.unit(Map[K, B]()))((ka, ml) => M.map2(f(ka._2), ml)((b, m) => m + (ka._1 -> b)))
+  }
 }
