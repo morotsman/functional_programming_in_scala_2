@@ -463,4 +463,23 @@ class ApplicativeTest extends FunSuite {
     val saleryAndNumberOfPersons = traverser.foldMap(structure)(a => (a.salery, 1))(Monoid.productMonoid(Monoid.intAddition, Monoid.intAddition))
     assert(saleryAndNumberOfPersons == (770000, 14))
   }
+
+  test("composeM option option") {
+    val monad = Monad2.composeM(Monad2.optionMonad, Monad2.optionMonad, Traverse.optionTraverse)
+    val structure: Option[Option[Int]] = Some(Some(1))
+
+    val result = monad.flatMap(structure)(a => Some(Some(a + 1)))
+    assert(result == Some(Some(2)))
+
+    val result2 = monad.map(structure)(a => a + 1)
+    assert(result2 == Some(Some(2)))
+  }
+
+  test("composeM List option") {
+    val monad = Monad2.composeM(Monad2.listMonad, Monad2.optionMonad, Traverse.optionTraverse)
+    val structure = List(Some(1), Some(2), Some(3), None)
+
+    val result = monad.map(structure)(a => a + 1)
+    assert(result == List(Some(2), Some(3), Some(4), None))
+  }
 }
