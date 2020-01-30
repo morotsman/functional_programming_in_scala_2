@@ -383,4 +383,12 @@ class ApplicativeTest extends FunSuite {
     val result6 = T.foldMap(List[Int]())(a => (a, 1))(sumLength)
     assert(result6 == (0, 0))
   }
+
+  test("traverse compose") {
+    val lT: Traverse[List] = Traverse.listTraverse
+    val oT: Traverse[Option] = Traverse.optionTraverse
+    val tmp = lT.compose(oT)
+    val result = tmp.foldMap(List(Some(1), Some(2), Some(3)))(a => a)(Monoid.intAddition)
+    assert(result == 6)
+  }
 }
