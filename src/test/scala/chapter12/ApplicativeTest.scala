@@ -366,6 +366,7 @@ class ApplicativeTest extends FunSuite {
     assert(result == Some(list))
 
     def lessThenFour(number: Int): Option[Int] = if (number < 4) Some(number) else None
+
     val result2 = T.fuse(list)(a => Some(a): Option[Int], a => lessThenFour(a))
     assert(result2 == (Some(list), None))
 
@@ -415,28 +416,25 @@ class ApplicativeTest extends FunSuite {
     assert(result2 == Some(structure))
   }
 
+  object Role extends Enumeration {
+    type Role = Value
+    val Manager, Developer, ScrumMaster, ProductOwner = Value
+  }
+
+  import Role._
+
+  case class Person(firstName: String, lastName: String, salery: Int, role: Role)
+
   test("traverse compose 3") {
-    val mT = Traverse.mapTraverse[String]
-    val lT = Traverse.listTraverse
-    val traverser = mT.compose(lT)
-
-    object Role extends Enumeration {
-      type Role = Value
-      val Manager, Developer, ScrumMaster, ProductOwner = Value
-    }
-    import Role._
-
-    case class Person(firstName: String, lastName: String, salery: Int, role: Role)
-
     val structure = Map[String, List[Person]](
       "dep1" -> List(
-          Person("Some", "Manager", 100000, Manager),
-          Person("Some", "Developer", 20000, Developer),
-          Person("Some", "Developer", 15000, Developer),
-          Person("Some", "Developer", 25000, Developer),
-          Person("Some", "Developer", 20000, Developer),
-          Person("Some", "ScrumMaster", 70000, ScrumMaster),
-          Person("Some", "ProductOwner", 80000, ProductOwner)
+        Person("Some", "Manager", 100000, Manager),
+        Person("Some", "Developer", 20000, Developer),
+        Person("Some", "Developer", 15000, Developer),
+        Person("Some", "Developer", 25000, Developer),
+        Person("Some", "Developer", 20000, Developer),
+        Person("Some", "ScrumMaster", 70000, ScrumMaster),
+        Person("Some", "ProductOwner", 80000, ProductOwner)
       ),
       "dep2" -> List(
         Person("Some", "Manager", 150000, Manager),
@@ -446,15 +444,23 @@ class ApplicativeTest extends FunSuite {
         Person("Some", "Developer", 20000, Developer),
         Person("Some", "ScrumMaster", 100000, ScrumMaster),
         Person("Some", "ProductOwner", 110000, ProductOwner)
-    ))
+      ))
+
+    val mT = Traverse.mapTraverse[String]
+    val lT = Traverse.listTraverse
+    val traverser = mT.compose(lT)
 
     val totalSalery = traverser.foldMap(structure)(a => a.salery)(Monoid.intAddition)
     assert(totalSalery == 770000)
 
     val maxSalery = traverser.foldMap(structure)(a => a.salery)(new Monoid[Int] {
       override def op(a1: Int, a2: Int): Int = a1 max a2
+
       override def zero: Int = 0
     })
     assert(maxSalery == 150000)
+
+    val saleryAndNumberOfPersons = traverser.foldMap(structure)(a => (a.salery, 1))(Monoid.productMonoid(Monoid.intAddition, Monoid.intAddition))
+    assert(saleryAndNumberOfPersons == (770000, 14))
   }
 }
