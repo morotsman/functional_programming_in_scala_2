@@ -40,6 +40,22 @@ object IO extends Monad2[IO] {
     println(message)
   }
 
+  def ref[A](a: A): IO[IORef[A]] = IO {
+    new IORef(a)
+  }
+
+  sealed class IORef[A](var value: A) {
+    def set(a: A): IO[A] = IO {
+      value = a; a
+    }
+
+    def get: IO[A] = IO {
+      value
+    }
+
+    def modify(f: A => A): IO[A] = get flatMap (a => set(f(a)))
+  }
+
   val echo = ReadLine.flatMap(PrintLine)
 
   val readInt = ReadLine.map(_.toInt)

@@ -21,6 +21,12 @@ trait Monad2[F[_]] extends Applicative[F] {
   override def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C] =
     flatMap(fa)(a => map(fb)(b => f(a, b)))
 
+  def sequence_[A](fs: Stream[F[A]]): F[Unit] = foreachM(fs)(skip)
+
+  def sequence_[A](fs: F[A]*): F[Unit] = sequence_(fs.toStream)
+
+  def replicateMS[A](n: Int)(f: F[A]): F[List[A]] =
+    Stream.fill(n)(f).foldRight(unit(List[A]()))(map2(_, _)(Cons(_, _)))
 
   def replicateM_[A](n: Int)(f: F[A]): F[Unit] =
     foreachM(Stream.fill(n)(f))(skip)

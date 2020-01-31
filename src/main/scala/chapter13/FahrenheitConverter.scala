@@ -13,9 +13,7 @@ object FahrenheitConverter {
   } yield ()
 
   def main(args: Array[String]): Unit = {
-    println("start")
     converter.run
-    println("stop")
   }
 
 
