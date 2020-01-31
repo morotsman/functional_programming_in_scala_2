@@ -481,5 +481,8 @@ class ApplicativeTest extends FunSuite {
 
     val result = monad.map(structure)(a => a + 1)
     assert(result == List(Some(2), Some(3), Some(4), None))
+
+    val result2 = structure.map(oi => oi.map(i => i + 1))
+    assert(result2 == List(Some(2), Some(3), Some(4), None))
   }
 }
