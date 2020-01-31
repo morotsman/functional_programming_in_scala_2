@@ -1,5 +1,7 @@
 package chapter13
 
+import chapter12.Monad2
+
 
 object IO3 {
   /*
@@ -20,7 +22,7 @@ object IO3 {
   case class Suspend[A](resume: () => A) extends TailRec[A]
   case class FlatMap[A,B](sub: TailRec[A], k: A => TailRec[B]) extends TailRec[B]
 
-  object TailRec extends Monad3[TailRec] {
+  object TailRec extends Monad2[TailRec] {
     def unit[A](a: => A): TailRec[A] = Return(a)
     def flatMap[A,B](a: TailRec[A])(f: A => TailRec[B]): TailRec[B] = a flatMap f
     def suspend[A](a: => TailRec[A]) =

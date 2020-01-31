@@ -1,7 +1,6 @@
 package chapter13
 
 import chapter12.Monad2
-import chapter13.IO1.IO
 
 object IO2 {
   sealed trait IO[A] {
