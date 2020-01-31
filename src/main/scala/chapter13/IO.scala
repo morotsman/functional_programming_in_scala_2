@@ -31,4 +31,20 @@ object IO extends Monad2[IO] {
   }
 
   def apply[A](a: => A): IO[A] = unit(a)
+
+  def ReadLine: IO[String] = IO {
+    readLine
+  }
+
+  def PrintLine(message: String): IO[Unit] = IO {
+    println(message)
+  }
+
+  val echo = ReadLine.flatMap(PrintLine)
+
+  val readInt = ReadLine.map(_.toInt)
+
+  val readInts = map2(readInt, readInt)((_, _))
+
+  val read10Lines = replicateM(10, ReadLine)
 }

@@ -20,6 +20,55 @@ trait Monad2[F[_]] extends Applicative[F] {
 
   override def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C] =
     flatMap(fa)(a => map(fb)(b => f(a, b)))
+
+
+  def replicateM_[A](n: Int)(f: F[A]): F[Unit] =
+    foreachM(Stream.fill(n)(f))(skip)
+
+  def as[A, B](a: F[A])(b: B): F[B] = map(a)(_ => b)
+
+  def skip[A](a: F[A]): F[Unit] = as(a)(())
+
+  def when[A](b: Boolean)(fa: => F[A]): F[Boolean] =
+    if (b) as(fa)(true) else unit(false)
+
+  def forever[A, B](a: F[A]): F[B] = {
+    lazy val t: F[B] = a flatMap (_ => t)
+    t
+  }
+
+  def while_(a: F[Boolean])(b: F[Unit]): F[Unit] = {
+    lazy val t: F[Unit] = while_(a)(b)
+    a flatMap (c => skip(when(c)(t)))
+  }
+
+  def doWhile[A](a: F[A])(cond: A => F[Boolean]): F[Unit] = for {
+    a1 <- a
+    ok <- cond(a1)
+    _ <- if (ok) doWhile(a)(cond) else unit(())
+  } yield ()
+
+  def foldM[A, B](l: Stream[A])(z: B)(f: (B, A) => F[B]): F[B] =
+    l match {
+      case h #:: t => f(z, h) flatMap (z2 => foldM(t)(z2)(f))
+      case _ => unit(z)
+    }
+
+  def foldM_[A, B](l: Stream[A])(z: B)(f: (B, A) => F[B]): F[Unit] =
+    skip {
+      foldM(l)(z)(f)
+    }
+
+  def foreachM[A](l: Stream[A])(f: A => F[Unit]): F[Unit] =
+    foldM_(l)(())((u, a) => skip(f(a)))
+
+  // syntax
+  implicit def toMonadic[A](a: F[A]): Monadic[F, A] =
+    new Monadic[F, A] {
+      val F = Monad2.this;
+
+      def get = a
+    }
 }
 
 object Monad2 {
@@ -62,4 +111,32 @@ object Monad2 {
         G.flatMap(mna)(na => G.map(T.traverse(na)(f))(H.join))
       }
     }
+}
+
+trait Monadic[F[_], A] {
+  val F: Monad2[F]
+
+  import F._
+
+  def get: F[A]
+
+  private val a = get
+
+  def map[B](f: A => B): F[B] = F.map(a)(f)
+
+  def flatMap[B](f: A => F[B]): F[B] = F.flatMap(a)(f)
+
+  def **[B](b: F[B]) = F.map2(a, b)((_, _))
+
+  def *>[B](b: F[B]) = F.map2(a, b)((_, b) => b)
+
+  def map2[B, C](b: F[B])(f: (A, B) => C): F[C] = F.map2(a, b)(f)
+
+  def as[B](b: B): F[B] = F.as(a)(b)
+
+  def skip: F[Unit] = F.skip(a)
+
+  def replicateM(n: Int) = F.replicateM(n, a)
+
+  def replicateM_(n: Int) = F.replicateM_(n)(a)
 }
