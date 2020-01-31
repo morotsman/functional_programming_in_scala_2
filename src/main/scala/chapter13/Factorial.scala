@@ -1,6 +1,6 @@
 package chapter13
 
-import chapter13.FahrenheitConverter.fahrenheitToCelsius
+import chapter13.IO1._
 
 object Factorial {
 

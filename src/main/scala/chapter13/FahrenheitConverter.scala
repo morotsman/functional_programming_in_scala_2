@@ -1,5 +1,6 @@
 package chapter13
 
+import chapter13.IO1._
 
 object FahrenheitConverter {
   def fahrenheitToCelsius(f: Double): Double =
