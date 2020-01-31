@@ -23,16 +23,20 @@ object IO2 {
   }
 
   def PrintLine(s: String): IO[Unit] =
-    Suspend(() => Return(println(s)))
+    Suspend(() => {
+      Return(println(s))
+    })
 
-  def ReadLine: IO[String] = Return(readLine)
+  def ReadLine: IO[String] =
+    Suspend(() => {
+      readLine
+    })
 
+  def p = IO.forever(PrintLine("Still going..."))
 
-  val p = IO.forever(PrintLine("Still going..."))
-
-  val actions: Stream[IO[Unit]] =
+  def actions: Stream[IO[Unit]] =
     Stream.fill(100000)(PrintLine("Still going..."))
-  val composite: IO[Unit] =
+  def composite: IO[Unit] =
     actions.foldLeft(IO.unit(())) { (acc, a) => acc flatMap { _ => a } }
 
   // There is only one sensible way to implement this as a
