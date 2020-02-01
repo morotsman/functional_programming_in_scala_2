@@ -51,10 +51,10 @@ class ParTest extends FunSuite {
 
   test("fold usage") {
     def sum(ints: IndexedSeq[Int]): Par[Int] =
-      fold(ints)(0)(Par.unit(_))(_ + _)
+      parFold(ints)(0)(Par.unit(_))(_ + _)
 
     def max(ints: IndexedSeq[Int]): Par[Option[Int]] =
-      fold(ints)(None: Option[Int])(a => Par.unit(Some(a)))((a,b) => Option.map2(a, b)(_ max _))
+      parFold(ints)(None: Option[Int])(a => Par.unit(Some(a)))((a, b) => Option.map2(a, b)(_ max _))
 
     val sumProp = Prop.forAll(Gen.listOf(Gen.int)) { l =>
       if (l.size() == 0)

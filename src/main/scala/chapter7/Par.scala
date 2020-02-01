@@ -54,14 +54,14 @@ object Par {
     map(plla)(lla => lla.flatMap(la => la))
   }
 
-  def fold[A, B](as: IndexedSeq[A])(b: B)(f: A => Par[B])(m: (B, B) => B): Par[B] = {
+  def parFold[A, B](as: IndexedSeq[A])(b: B)(f: A => Par[B])(m: (B, B) => B): Par[B] = {
     if (as.size == 0) {
       unit(b)
     } else if(as.size == 1) {
       f(as.head)
     } else {
       val (l, r) = as.splitAt(as.length / 2)
-      Par.map2(fork(fold(l)(b)(f)(m)), fork(fold(r)(b)(f)(m)))(((a, b) => m(a, b)))
+      Par.map2(fork(parFold(l)(b)(f)(m)), fork(parFold(r)(b)(f)(m)))(((a, b) => m(a, b)))
     }
   }
 
