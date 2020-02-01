@@ -45,7 +45,7 @@ object Par {
   def chooser[A, B](pa: Par[A])(choices: A => Par[B]): Par[B] =
     es => new Future[B] {
       override private[chapter7] def apply(cb: B => Unit): Unit =
-        pa(es)(a => choices(a)(es)(cb))
+        pa(es)(a => choices(a)(es)(b => cb(b)))
 
     }
 
