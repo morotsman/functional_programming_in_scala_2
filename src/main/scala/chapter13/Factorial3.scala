@@ -13,7 +13,7 @@ object Factorial3 {
   """.trim.stripMargin
 
 
-  def factorial2(n: Int): Int = {
+  def factorial(n: Int): Int = {
     def go(i: Int, acc: Int): Int =
       if (i > n) acc
       else if (i == 0) go(i + 1, 1)
@@ -29,7 +29,7 @@ object Factorial3 {
       val ok = line != "q"
       TailRec.when(ok) {
         for {
-          - <- PrintLine("factorial: "  + factorial2(line.toInt).toString)
+          - <- PrintLine("factorial: "  + factorial(line.toInt).toString)
         } yield ()
       }
     })
@@ -40,7 +40,7 @@ object Factorial3 {
       val ok = line != "q"
       TailRec.when(ok) {
         for {
-          - <- PrintLine("factorial: "  + factorial2(line.toInt).toString)
+          - <- PrintLine("factorial: "  + factorial(line.toInt).toString)
         } yield ()
       }
     }
