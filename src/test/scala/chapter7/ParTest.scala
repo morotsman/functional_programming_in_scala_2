@@ -105,4 +105,17 @@ class ParTest extends FunSuite {
     }
     Prop.run(prop)
   }
+
+  test("countWords") {
+    def wc(ps: List[List[String]]): Par[Int] = {
+      val seq = ps.toScalaList().toIndexedSeq
+      parFold(seq)(0)(a => Par.unit(a.size()))(_ + _)
+    }
+
+    assert(Par.run(es)(wc(List())).get() == 0)
+    assert(Par.run(es)(wc(List(List()))).get() == 0)
+    assert(Par.run(es)(wc(List(List("a", "b")))).get() == 2)
+    assert(Par.run(es)(wc(List(List("a", "b"), List("a", "b", "c", "d")))).get() == 6)
+
+  }
 }
