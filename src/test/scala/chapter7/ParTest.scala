@@ -5,6 +5,7 @@ import java.util.concurrent.Executors
 import org.scalatest.FunSuite
 import Par._
 import chapter3.List
+import chapter4.{Option, Some, None}
 import chapter8.{Gen, Prop}
 
 class ParTest extends FunSuite {
@@ -13,19 +14,39 @@ class ParTest extends FunSuite {
 
 
   test("Par usage") {
-    def sum(ints: IndexedSeq[Int]): Par[Int] = {
+    def sum(ints: IndexedSeq[Int]): Par[Option[Int]] = {
       if (ints.size <= 1)
-        Par.unit(ints.headOption getOrElse (0))
+        Par.unit(if (ints.isEmpty) None else Some(ints.head))
       else {
         val (l, r) = ints.splitAt(ints.length / 2)
-        Par.map2(fork(sum(l)), fork(sum(r)))(_ + _)
+        Par.map2(fork(sum(l)), fork(sum(r)))((ol, or) => Option.map2(ol, or)(_+_))
       }
     }
 
-    val prop = Prop.forAll(Gen.listOf(Gen.int)) { l =>
-      Par.run(es)(sum(l.toScalaList().toIndexedSeq)).get() == l.toScalaList().sum
+    def max(ints: IndexedSeq[Int]): Par[Option[Int]] = {
+      if (ints.size <= 1)
+        Par.unit(if (ints.isEmpty) None else Some(ints.head))
+      else {
+        val (l, r) = ints.splitAt(ints.length / 2)
+        Par.map2(fork(max(l)), fork(max(r)))((ol, or) => Option.map2(ol, or)(_ max _))
+      }
     }
-    Prop.run(prop)
+
+    val sumProp = Prop.forAll(Gen.listOf(Gen.int)) { l =>
+      if(l.size() == 0)
+        Par.run(es)(sum(l.toScalaList().toIndexedSeq)).get() == None
+       else
+        Par.run(es)(sum(l.toScalaList().toIndexedSeq)).get() == Some(l.toScalaList().sum)
+    }
+
+    val maxProp = Prop.forAll(Gen.listOf(Gen.int)) { l =>
+      if(l.size() == 0)
+        Par.run(es)(max(l.toScalaList().toIndexedSeq)).get() == None
+      else
+        Par.run(es)(max(l.toScalaList().toIndexedSeq)).get() == Some(l.toScalaList().max)
+    }
+
+    Prop.run(sumProp && maxProp)
   }
 
   test("asyncF") {
@@ -45,16 +66,16 @@ class ParTest extends FunSuite {
 
   test(" parMap") {
     val prop = Prop.forAll(Gen.listOf(Gen.int)) { l =>
-      val result  = parMap(l)(a => a)
+      val result = parMap(l)(a => a)
       Par.run(es)(result).get() == l.map(a => a)
     }
     Prop.run(prop)
   }
 
   test(" parFilter") {
-    val prop = Prop.forAll(Gen.listOf(Gen.choose(-10,10))) { l =>
+    val prop = Prop.forAll(Gen.listOf(Gen.choose(-10, 10))) { l =>
       val predicate: Int => Boolean = a => a < 5
-      val result  = parFilter(l)(predicate)
+      val result = parFilter(l)(predicate)
       Par.run(es)(result).get() == l.filter(predicate)
     }
     Prop.run(prop)
