@@ -46,11 +46,19 @@ object Par {
     es => new Future[B] {
       override private[chapter7] def apply(cb: B => Unit): Unit =
         pa(es)(a => choices(a)(es)(b => cb(b)))
-
     }
 
   def flatMap[A,B](pa: Par[A])(f: A => Par[B]): Par[B] =
     chooser(pa)(f)
+
+  def choice[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+    chooser(cond)(c => if (c) t else f)
+
+  def choiceN[A](pi: Par[Int])(choices: List[Par[A]]): Par[A] =
+    chooser(pi)(i => choices.toScalaList()(i))
+
+  def join[A](a: Par[Par[A]]): Par[A] =
+    flatMap(a)(a => a)
 
   def fork[A](a: => Par[A]): Par[A] =
     es => new Future[A] {
