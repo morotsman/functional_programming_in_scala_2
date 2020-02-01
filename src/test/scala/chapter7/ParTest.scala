@@ -12,7 +12,6 @@ class ParTest extends FunSuite {
 
   val es = Executors.newFixedThreadPool(100)
 
-
   test("Par usage") {
     def sum(ints: IndexedSeq[Int]): Par[Option[Int]] = {
       if (ints.size <= 1)
@@ -34,16 +33,16 @@ class ParTest extends FunSuite {
 
     val sumProp = Prop.forAll(Gen.listOf(Gen.int)) { l =>
       if (l.size() == 0)
-        Par.run(es)(sum(l.toScalaList().toIndexedSeq)).get() == None
+        Par.run(es)(sum(l.toScalaList().toIndexedSeq)) == None
       else
-        Par.run(es)(sum(l.toScalaList().toIndexedSeq)).get() == Some(l.toScalaList().sum)
+        Par.run(es)(sum(l.toScalaList().toIndexedSeq)) == Some(l.toScalaList().sum)
     }
 
     val maxProp = Prop.forAll(Gen.listOf(Gen.int)) { l =>
       if (l.size() == 0)
-        Par.run(es)(max(l.toScalaList().toIndexedSeq)).get() == None
+        Par.run(es)(max(l.toScalaList().toIndexedSeq)) == None
       else
-        Par.run(es)(max(l.toScalaList().toIndexedSeq)).get() == Some(l.toScalaList().max)
+        Par.run(es)(max(l.toScalaList().toIndexedSeq)) == Some(l.toScalaList().max)
     }
 
     Prop.run(sumProp && maxProp)
@@ -58,16 +57,16 @@ class ParTest extends FunSuite {
 
     val sumProp = Prop.forAll(Gen.listOf(Gen.int)) { l =>
       if (l.size() == 0)
-        Par.run(es)(sum(l.toScalaList().toIndexedSeq)).get() == 0
+        Par.run(es)(sum(l.toScalaList().toIndexedSeq)) == 0
       else
-        Par.run(es)(sum(l.toScalaList().toIndexedSeq)).get() == l.toScalaList().sum
+        Par.run(es)(sum(l.toScalaList().toIndexedSeq)) == l.toScalaList().sum
     }
 
     val maxProp = Prop.forAll(Gen.listOf(Gen.int)) { l =>
       if (l.size() == 0)
-        Par.run(es)(max(l.toScalaList().toIndexedSeq)).get() == None
+        Par.run(es)(max(l.toScalaList().toIndexedSeq)) == None
       else
-        Par.run(es)(max(l.toScalaList().toIndexedSeq)).get() == Some(l.toScalaList().max)
+        Par.run(es)(max(l.toScalaList().toIndexedSeq)) == Some(l.toScalaList().max)
     }
 
     Prop.run(maxProp && sumProp)
@@ -78,13 +77,13 @@ class ParTest extends FunSuite {
     def add2(a: Int): Int = a + 2
 
     val asyncAdd2: Int => Par[Int] = asyncF(add2)
-    assert(Par.run(es)(asyncAdd2(2)).get() == 4)
+    assert(Par.run(es)(asyncAdd2(2)) == 4)
   }
 
   test("sequence") {
     val prop = Prop.forAll(Gen.listOf(Gen.int)) { l =>
       val seq = sequence(l.map(unit))
-      Par.run(es)(seq).get() == l
+      Par.run(es)(seq) == l
     }
     Prop.run(prop)
   }
@@ -92,7 +91,7 @@ class ParTest extends FunSuite {
   test(" parMap") {
     val prop = Prop.forAll(Gen.listOf(Gen.int)) { l =>
       val result = parMap(l)(a => a)
-      Par.run(es)(result).get() == l.map(a => a)
+      Par.run(es)(result) == l.map(a => a)
     }
     Prop.run(prop)
   }
@@ -101,7 +100,7 @@ class ParTest extends FunSuite {
     val prop = Prop.forAll(Gen.listOf(Gen.choose(-10, 10))) { l =>
       val predicate: Int => Boolean = a => a < 5
       val result = parFilter(l)(predicate)
-      Par.run(es)(result).get() == l.filter(predicate)
+      Par.run(es)(result) == l.filter(predicate)
     }
     Prop.run(prop)
   }
@@ -112,10 +111,10 @@ class ParTest extends FunSuite {
       parFold(seq)(0)(a => Par.unit(a.size()))(_ + _)
     }
 
-    assert(Par.run(es)(wc(List())).get() == 0)
-    assert(Par.run(es)(wc(List(List()))).get() == 0)
-    assert(Par.run(es)(wc(List(List("a", "b")))).get() == 2)
-    assert(Par.run(es)(wc(List(List("a", "b"), List("a", "b", "c", "d")))).get() == 6)
+    assert(Par.run(es)(wc(List())) == 0)
+    assert(Par.run(es)(wc(List(List()))) == 0)
+    assert(Par.run(es)(wc(List(List("a", "b")))) == 2)
+    assert(Par.run(es)(wc(List(List("a", "b"), List("a", "b", "c", "d")))) == 6)
 
   }
 }
