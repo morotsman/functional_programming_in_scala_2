@@ -47,5 +47,12 @@ object Par {
     sequence(lpb)
   }
 
+  def parFilter[A](as: List[A])(f: A => Boolean): Par[List[A]] = fork {
+    val ff: A => List[A] = (a: A) => if (f(a)) List(a) else List()
+    val lpla: List[Par[List[A]]] = as.map(asyncF(ff))
+    val plla: Par[List[List[A]]]= sequence(lpla)
+    map(plla)(lla => lla.flatMap(la => la))
+  }
+
   def run[A](s: ExecutorService)(pa: Par[A]): Future[A] = pa(s)
 }

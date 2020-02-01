@@ -42,4 +42,21 @@ class ParTest extends FunSuite {
     }
     Prop.run(prop)
   }
+
+  test(" parMap") {
+    val prop = Prop.forAll(Gen.listOf(Gen.int)) { l =>
+      val result  = parMap(l)(a => a)
+      Par.run(es)(result).get() == l.map(a => a)
+    }
+    Prop.run(prop)
+  }
+
+  test(" parFilter") {
+    val prop = Prop.forAll(Gen.listOf(Gen.choose(-10,10))) { l =>
+      val predicate: Int => Boolean = a => a < 5
+      val result  = parFilter(l)(predicate)
+      Par.run(es)(result).get() == l.filter(predicate)
+    }
+    Prop.run(prop)
+  }
 }
