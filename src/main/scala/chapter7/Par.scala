@@ -42,10 +42,20 @@ object Par {
       }
     }
 
+  def chooser[A, B](pa: Par[A])(choices: A => Par[B]): Par[B] =
+    es => new Future[B] {
+      override private[chapter7] def apply(cb: B => Unit): Unit =
+        pa(es)(a => choices(a)(es)(cb))
+
+    }
+
+  def flatMap[A,B](pa: Par[A])(f: A => Par[B]): Par[B] =
+    chooser(pa)(f)
+
   def fork[A](a: => Par[A]): Par[A] =
     es => new Future[A] {
-      override private[chapter7] def apply(k: A => Unit): Unit =
-        eval(es)(a(es)(k))
+      override private[chapter7] def apply(cb: A => Unit): Unit =
+        eval(es)(a(es)(cb))
     }
 
   def eval(es: ExecutorService)(r: => Unit): Unit =

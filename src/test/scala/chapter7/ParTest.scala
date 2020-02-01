@@ -10,7 +10,7 @@ import chapter8.{Gen, Prop}
 
 class ParTest extends FunSuite {
 
-  val es = Executors.newFixedThreadPool(100)
+  val es = Executors.newFixedThreadPool(1)
 
   test("Par usage") {
     def sum(ints: IndexedSeq[Int]): Par[Option[Int]] = {
@@ -108,13 +108,18 @@ class ParTest extends FunSuite {
   test("countWords") {
     def wc(ps: List[List[String]]): Par[Int] = {
       val seq = ps.toScalaList().toIndexedSeq
-      parFold(seq)(0)(a => Par.unit(a.size()))(_ + _)
+      parFold(seq)(0)(a => {
+        Par.unit(a.size())
+      })(_ + _)
     }
 
     assert(Par.run(es)(wc(List())) == 0)
     assert(Par.run(es)(wc(List(List()))) == 0)
     assert(Par.run(es)(wc(List(List("a", "b")))) == 2)
     assert(Par.run(es)(wc(List(List("a", "b"), List("a", "b", "c", "d")))) == 6)
+  }
 
+  test("chooser") {
+    assert(Par.run(es)(Par.chooser(Par.unit(1))(a => Par.unit(a))) == 1)
   }
 }
