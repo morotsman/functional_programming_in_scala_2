@@ -31,6 +31,18 @@ object Par {
       UnitFuture(f(af.get(), bf.get()))
     }
 
+  def map3[A, B, C, D](pa: Par[A], pb: Par[B], pc: Par[C])(f: (A, B, C) => D): Par[D] = {
+    val fcurry = (a: A, b: B) => (c: C) => f(a, b, c)
+    val pcTod = map2(pa, pb)(fcurry)
+    map2(pcTod, pc)((cTod, c) => cTod(c))
+  }
+
+  def map4[A, B, C, D, E](pa: Par[A], pb: Par[B], pc: Par[C], pd: Par[D])(f: (A, B, C, D) => E): Par[E] = {
+    val fcurry = (a: A, b: B, c: C) => (d: D) => f(a, b, c, d)
+    val pdToe = map3(pa, pb, pc)(fcurry)
+    map2(pdToe, pd)((pdToe, d) => pdToe(d))
+  }
+
   def fork[A](a: => Par[A]): Par[A] =
     es => es.submit(() => a(es).get())
 
@@ -57,7 +69,7 @@ object Par {
   def parFold[A, B](as: IndexedSeq[A])(b: B)(f: A => Par[B])(m: (B, B) => B): Par[B] = {
     if (as.size == 0) {
       unit(b)
-    } else if(as.size == 1) {
+    } else if (as.size == 1) {
       f(as.head)
     } else {
       val (l, r) = as.splitAt(as.length / 2)
