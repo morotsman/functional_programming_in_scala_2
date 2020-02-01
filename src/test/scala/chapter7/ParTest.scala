@@ -9,15 +9,20 @@ class ParTest extends FunSuite {
 
 
   test("Par usage") {
-    def sum(ints: IndexedSeq[Int]): Par[Int] =
+    def sum(ints: IndexedSeq[Int]): Par[Int] = {
+      println("sum: " + ints)
+      Thread.sleep(1000)
       if (ints.size <= 1)
         Par.unit(ints.headOption getOrElse (0))
       else {
         val (l, r) =  ints.splitAt(ints.length / 2)
-        Par.map2(sum(l), sum(r))(_+_)
+        Par.map2(fork(sum(l)), fork(sum(r)))(_+_)
       }
-    val es = Executors.newFixedThreadPool(2)
-    assert(Par.run(es)(sum(List(1,2,3).toIndexedSeq)).get() == 6)
+    }
+
+
+    val es = Executors.newFixedThreadPool(100)
+    assert(Par.run(es)(sum(List(1,2,3,4,5,6,7,8,9).toIndexedSeq)).get() == 45)
   }
 
 }

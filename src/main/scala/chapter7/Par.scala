@@ -16,10 +16,11 @@ object Par {
     override def get(timeout: Long, unit: TimeUnit): A = get
   }
 
-  def unit[A](a: A): Par[A] = (es: ExecutorService) => UnitFuture(a)
+  def unit[A](a: A): Par[A] =
+    es => UnitFuture(a)
 
   def map2[A, B, C](pa: Par[A], pb: Par[B])(f: (A, B) => C): Par[C] =
-    (es: ExecutorService) => {
+    es => {
       val af = pa(es)
       val bf = pb(es)
       UnitFuture(f(af.get(), bf.get()))
