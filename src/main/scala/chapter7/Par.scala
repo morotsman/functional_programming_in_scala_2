@@ -50,8 +50,19 @@ object Par {
   def parFilter[A](as: List[A])(f: A => Boolean): Par[List[A]] = fork {
     val ff: A => List[A] = (a: A) => if (f(a)) List(a) else List()
     val lpla: List[Par[List[A]]] = as.map(asyncF(ff))
-    val plla: Par[List[List[A]]]= sequence(lpla)
+    val plla: Par[List[List[A]]] = sequence(lpla)
     map(plla)(lla => lla.flatMap(la => la))
+  }
+
+  def fold[A, B](as: IndexedSeq[A])(b: B)(f: A => Par[B])(m: (B, B) => B): Par[B] = {
+    if (as.size == 0) {
+      unit(b)
+    } else if(as.size == 1) {
+      f(as.head)
+    } else {
+      val (l, r) = as.splitAt(as.length / 2)
+      Par.map2(fork(fold(l)(b)(f)(m)), fork(fold(r)(b)(f)(m)))(((a, b) => m(a, b)))
+    }
   }
 
   def run[A](s: ExecutorService)(pa: Par[A]): Future[A] = pa(s)

@@ -19,7 +19,7 @@ class ParTest extends FunSuite {
         Par.unit(if (ints.isEmpty) None else Some(ints.head))
       else {
         val (l, r) = ints.splitAt(ints.length / 2)
-        Par.map2(fork(sum(l)), fork(sum(r)))((ol, or) => Option.map2(ol, or)(_+_))
+        Par.map2(fork(sum(l)), fork(sum(r)))((ol, or) => Option.map2(ol, or)(_ + _))
       }
     }
 
@@ -33,14 +33,14 @@ class ParTest extends FunSuite {
     }
 
     val sumProp = Prop.forAll(Gen.listOf(Gen.int)) { l =>
-      if(l.size() == 0)
+      if (l.size() == 0)
         Par.run(es)(sum(l.toScalaList().toIndexedSeq)).get() == None
-       else
+      else
         Par.run(es)(sum(l.toScalaList().toIndexedSeq)).get() == Some(l.toScalaList().sum)
     }
 
     val maxProp = Prop.forAll(Gen.listOf(Gen.int)) { l =>
-      if(l.size() == 0)
+      if (l.size() == 0)
         Par.run(es)(max(l.toScalaList().toIndexedSeq)).get() == None
       else
         Par.run(es)(max(l.toScalaList().toIndexedSeq)).get() == Some(l.toScalaList().max)
@@ -48,6 +48,31 @@ class ParTest extends FunSuite {
 
     Prop.run(sumProp && maxProp)
   }
+
+  test("fold usage") {
+    def sum(ints: IndexedSeq[Int]): Par[Int] =
+      fold(ints)(0)(Par.unit(_))(_ + _)
+
+    def max(ints: IndexedSeq[Int]): Par[Option[Int]] =
+      fold(ints)(None: Option[Int])(a => Par.unit(Some(a)))((a,b) => Option.map2(a, b)(_ max _))
+
+    val sumProp = Prop.forAll(Gen.listOf(Gen.int)) { l =>
+      if (l.size() == 0)
+        Par.run(es)(sum(l.toScalaList().toIndexedSeq)).get() == 0
+      else
+        Par.run(es)(sum(l.toScalaList().toIndexedSeq)).get() == l.toScalaList().sum
+    }
+
+    val maxProp = Prop.forAll(Gen.listOf(Gen.int)) { l =>
+      if (l.size() == 0)
+        Par.run(es)(max(l.toScalaList().toIndexedSeq)).get() == None
+      else
+        Par.run(es)(max(l.toScalaList().toIndexedSeq)).get() == Some(l.toScalaList().max)
+    }
+
+    Prop.run(maxProp && sumProp)
+  }
+
 
   test("asyncF") {
     def add2(a: Int): Int = a + 2
