@@ -46,7 +46,7 @@ object Free {
     }
   }
 
-  //@annotation.tailrec
+  @annotation.tailrec
   def step[F[_], A](free: Free[F, A])(implicit F: Monad2[F]): Free[F, A] = free match {
     case FlatMap(FlatMap(x, f), g) => step(x.flatMap(a => f(a).flatMap(g)))
     case FlatMap(Return(x), f) => step(f(x))
