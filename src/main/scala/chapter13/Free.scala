@@ -1,6 +1,9 @@
 package chapter13
 
 import chapter12.Monad2
+import chapter7.Par
+import chapter7.Par.Par
+
 import language.higherKinds
 import language.postfixOps
 
@@ -47,7 +50,7 @@ object Free {
   }
 
   @annotation.tailrec
-  def step[F[_], A](free: Free[F, A])(implicit F: Monad2[F]): Free[F, A] = free match {
+  def step[F[_], A](free: Free[F, A]): Free[F, A] = free match {
     case FlatMap(FlatMap(x, f), g) => step(x.flatMap(a => f(a).flatMap(g)))
     case FlatMap(Return(x), f) => step(f(x))
     case _ => free
@@ -59,5 +62,65 @@ object Free {
     case _ => sys.error("Not possible since step has already matched")
   }
 
+  sealed trait Console[A] {
+    def toPar: Par[A]
 
+    def toThunk: () => A
+  }
+
+  case object ReadLine extends Console[Option[String]] {
+    override def toPar: Par[Option[String]] = Par.lazyUnit(run)
+
+    override def toThunk: () => Option[String] = () => run
+
+    def run: Option[String] =
+      try Some(readLine)
+      catch {
+        case e: Exception => None
+      }
+  }
+
+  case class PrintLine(line: String) extends Console[Unit] {
+    override def toPar: Par[Unit] = Par.lazyUnit(println(line))
+
+    override def toThunk: () => Unit = () => println(line)
+  }
+
+  object Console {
+    type ConsoleIO[A] = Free[Console, A]
+
+    def readLn: ConsoleIO[Option[String]] =
+      Suspend(ReadLine)
+
+    def printLn(line: String): ConsoleIO[Unit] =
+      Suspend(PrintLine(line))
+  }
+
+  trait Translate[F[_], G[_]] {
+    def apply[A](f: F[A]): G[A]
+  }
+
+  type ~>[F[_], G[_]] = Translate[F, G]
+
+  val consoleToFunction0 = new (Console ~> Function0){
+    override def apply[A](f: Console[A]): () => A = f.toThunk
+  }
+
+  val consoleToPar = new (Console ~> Par){
+    override def apply[A](f: Console[A]): Par[A] = f.toPar
+  }
+
+  def runFree[F[_], G[_], A](free: Free[F, A])(t: F ~> G)(implicit G: Monad2[G]): G[A] =
+    step(free) match {
+      case Return(a) => G.unit(a)
+      case Suspend(r) => t(r)
+      case FlatMap(Suspend(r), f) => G.flatMap(t(r))(a => runFree(f(a))(t))
+      case _ => sys.error("Impossible, step eliminates these cases")
+    }
+
+  def runConsoleFunction0[A](a: Free[Console, A]): () => A =
+    runFree[Console, Function0, A](a)(consoleToFunction0)
+
+  def runConsolePar[A](a: Free[Console, A]): Par[A] =
+    runFree[Console, Par, A](a)(consoleToPar)
 }

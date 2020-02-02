@@ -3,6 +3,8 @@ package chapter12
 import chapter3.{Cons, List}
 import chapter4.{Either, Left, None, Option, Right, Some}
 import chapter6.State
+import chapter7.Par
+import chapter7.Par.Par
 
 trait Monad2[F[_]] extends Applicative[F] {
   def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B]
@@ -78,35 +80,52 @@ trait Monad2[F[_]] extends Applicative[F] {
 }
 
 object Monad2 {
-  def eitherMonad[E] = new Monad2[({type f[x] = Either[E, x]})#f] {
-    override def flatMap[A, B](fa: Either[E, A])(f: A => Either[E, B]): Either[E, B] = fa match {
-      case left@Left(l) => left
-      case Right(a) => f(a)
+  implicit def eitherMonad[E]: Monad2[({type f[x] = Either[E, x]})#f] =
+    new Monad2[({type f[x] = Either[E, x]})#f] {
+      override def flatMap[A, B](fa: Either[E, A])(f: A => Either[E, B]): Either[E, B] = fa match {
+        case left@Left(l) => left
+        case Right(a) => f(a)
+      }
+
+      override def unit[A](a: => A): Either[E, A] =
+        Right(a)
     }
 
-    override def unit[A](a: => A): Either[E, A] =
-      Right(a)
-  }
-
-  def listMonad[A] = new Monad2[List] {
+  implicit def listMonad[A]: Monad2[List] = new Monad2[List] {
     override def flatMap[A, B](fa: List[A])(f: A => List[B]): List[B] =
       fa.flatMap(f)
 
     override def unit[A](a: => A): List[A] = List(a)
   }
 
-  def optionMonad[A] = new Monad2[Option] {
+  implicit def optionMonad[A]: Monad2[Option] = new Monad2[Option] {
     override def flatMap[A, B](fa: Option[A])(f: A => Option[B]): Option[B] =
       fa.flatMap(f)
 
     override def unit[A](a: => A): Option[A] = Some(a)
   }
 
-  def stateMonad[S] = new Monad2[({type lambda[x] = State[S, x]})#lambda] {
-    override def flatMap[A, B](fa: State[S, A])(f: A => State[S, B]): State[S, B] =
-      fa flatMap f
+  implicit def stateMonad[S]: Monad2[({type lambda[x] = State[S, x]})#lambda] =
+    new Monad2[({type lambda[x] = State[S, x]})#lambda] {
+      override def flatMap[A, B](fa: State[S, A])(f: A => State[S, B]): State[S, B] =
+        fa flatMap f
 
-    override def unit[A](a: => A): State[S, A] = State(s => (a, s))
+      override def unit[A](a: => A): State[S, A] = State(s => (a, s))
+    }
+
+  implicit val functionMonad: Monad2[Function0] = new Monad2[Function0] {
+    override def flatMap[A, B](fa: () => A)(f: A => () => B): () => B =
+      () => f(fa())()
+
+    override def unit[A](a: => A): () => A =
+      () => a
+  }
+
+  implicit val parMonad: Monad2[Par] = new Monad2[Par] {
+    override def flatMap[A, B](fa: Par[A])(f: A => Par[B]): Par[B] =
+      Par.fork(Par.flatMap(fa)(f))
+
+    override def unit[A](a: => A): Par[A] = Par.unit(a)
   }
 
   def composeM[G[_], H[_]](implicit G: Monad2[G], H: Monad2[H], T: Traverse[H]): Monad2[({type f[x] = G[H[x]]})#f] =
