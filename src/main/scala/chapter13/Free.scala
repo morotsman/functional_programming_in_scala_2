@@ -30,7 +30,8 @@ object Free {
     override def unit[A](a: => A): Free[F, A] = Return(a)
   }
 
-  val TailRec = freeMonad[Function0]
+  val TailRec: Monad2[({type f[a] = Free[Function0, a]})#f] =
+    freeMonad[Function0]
 
   type TailRecType[A] = Free[Function0, A]
 
@@ -102,11 +103,11 @@ object Free {
 
   type ~>[F[_], G[_]] = Translate[F, G]
 
-  val consoleToFunction0 = new (Console ~> Function0){
+  val consoleToFunction0: Console ~> Function0 = new (Console ~> Function0){
     override def apply[A](f: Console[A]): () => A = f.toThunk
   }
 
-  val consoleToPar = new (Console ~> Par){
+  val consoleToPar: Console ~> Par = new (Console ~> Par){
     override def apply[A](f: Console[A]): Par[A] = f.toPar
   }
 
