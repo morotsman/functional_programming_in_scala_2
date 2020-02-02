@@ -2,7 +2,6 @@ package chapter13
 
 import chapter12.Monad2
 
-
 object IO3 {
   /*
    * As it turns out, there's nothing about this data type that is specific
