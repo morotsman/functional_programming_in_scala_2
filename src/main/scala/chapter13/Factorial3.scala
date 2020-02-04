@@ -39,9 +39,7 @@ object Factorial3 {
     _ <- TailRec.doWhile { ReadLine } { line =>
       val ok = line != "q"
       TailRec.when(ok) {
-        for {
-          - <- PrintLine("factorial: "  + factorial(line.toInt).toString)
-        } yield ()
+        PrintLine("factorial: "  + factorial(line.toInt).toString)
       }
     }
   } yield ()

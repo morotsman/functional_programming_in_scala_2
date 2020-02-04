@@ -39,14 +39,12 @@ object Factorial2 {
     _ <- IO.doWhile { ReadLine } { line =>
       val ok = line != "q"
       IO.when(ok) {
-        for {
-          - <- PrintLine("factorial: "  + factorial(line.toInt).toString)
-        } yield ()
+        PrintLine("factorial: "  + factorial(line.toInt).toString)
       }
     }
   } yield ()
 
   def main(args: Array[String]): Unit = {
-    run(factorialREPL2)
+    run(factorialREPL3)
   }
 }

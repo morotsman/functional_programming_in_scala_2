@@ -49,14 +49,12 @@ object Factorial5 {
     _ <- TailRec.doWhile { ReadLine } { line =>
       val ok = line != "q"
       TailRec.when(ok) {
-        for {
-          - <- PrintLine("factorial: "  + factorial(line.toInt).toString)
-        } yield ()
+        PrintLine("factorial: "  + factorial(line.toInt).toString)
       }
     }
   } yield ()
 
   def main(args: Array[String]): Unit = {
-    runTrampoline(factorialREPL2)
+    runTrampoline(factorialREPL3)
   }
 }

@@ -42,9 +42,7 @@ object Factorial4 {
     _ <- Async.doWhile { ReadLine } { line =>
       val ok = line != "q"
       Async.when(ok) {
-        for {
-          - <- PrintLine("factorial: "  + factorial(line.toInt).toString)
-        } yield ()
+        PrintLine("factorial: "  + factorial(line.toInt).toString)
       }
     }
   } yield ()

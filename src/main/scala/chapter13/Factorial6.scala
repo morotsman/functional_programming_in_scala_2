@@ -39,9 +39,7 @@ object Factorial6 {
     _ <- freeMonad.doWhile { readLn } { line =>
       val ok = line.get != "q"
       freeMonad.when(ok) {
-        for {
-          - <- printLn("factorial: "  + factorial(line.get.toInt).toString)
-        } yield ()
+        printLn("factorial: "  + factorial(line.get.toInt).toString)
       }
     }
   } yield ()

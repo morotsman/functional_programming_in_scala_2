@@ -47,9 +47,7 @@ object Factorial {
     IO.doWhile { IO { readLine } } { line =>
       val ok = line != "q"
       IO.when(ok) {
-        for {
-          - <- IO.PrintLine("factorial: "  + factorial2(line.toInt).toString)
-        } yield ()
+          IO.PrintLine("factorial: "  + factorial2(line.toInt).toString)
       }
     })
 
