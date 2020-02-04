@@ -13,7 +13,6 @@ object Factorial6 {
       | <anything else> - bomb with horrible error
   """.trim.stripMargin
 
-
   def factorial(n: Int): Int = {
     def go(i: Int, acc: Int): Int =
       if (i > n) acc
@@ -22,17 +21,6 @@ object Factorial6 {
 
     go(0, 1)
   }
-
-  def PrintLine(s: String): TailRecType[Unit] =
-    Suspend(() => {
-      Return(println(s))
-    })
-
-  def ReadLine: TailRecType[String] =
-    Suspend(() => {
-      readLine
-    })
-
 
   def factorialREPL: Free[Console, Unit] =for {
     _ <- printLn(helpstring)
