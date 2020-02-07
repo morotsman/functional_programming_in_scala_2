@@ -25,8 +25,7 @@ object Factorial6 {
   def factorialREPL: Free[Console, Unit] =for {
     _ <- printLn(helpstring)
     _ <- freeMonad.doWhile { readLn } { line =>
-      val ok = line.get != "q"
-      freeMonad.when(ok) {
+      freeMonad.when(line.get != "q") {
         printLn("factorial: "  + factorial(line.get.toInt).toString)
       }
     }
