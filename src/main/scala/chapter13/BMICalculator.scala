@@ -29,9 +29,10 @@ object BMICalculator {
   } yield ()
 
   def main(args: Array[String]): Unit = {
-    runConsole(bmiProgram())
+    val program = bmiProgram()
+    //runConsole(program)
 
-    //val res: (Unit, Buffers) = runConsoleState(bmiProgram()).run(Buffers(List("70", "178"), List()))
+    //val res: (Unit, Buffers) = runConsoleState(program).run(Buffers(List("70", "178"), List()))
     //res._2.out.reverse().forEach(a => println(a))
   }
 }
