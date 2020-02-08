@@ -48,7 +48,7 @@ object Candy {
     }
     })
 
-  def errorInfoProgran(message: String): Free[Console, Unit] =
+  def errorInfoProgram(message: String): Free[Console, Unit] =
     printLn("Error: " + message)
 
   def currentStatusProgram(m: Machine): Free[Console, Unit] = m match {
@@ -63,7 +63,7 @@ object Candy {
     val result = runConsole(candyProgram()).run(Right(m))
     result._2 match {
       case Left(message) =>
-        runConsole(errorInfoProgran(message))
+        runConsole(errorInfoProgram(message))
         candyDispencer(m)
       case Right(m) =>
         candyDispencer(m)
