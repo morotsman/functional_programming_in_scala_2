@@ -48,9 +48,8 @@ object Candy {
     }
     })
 
-  def errorInfoProgran(message: String): Free[Console, Unit] = for {
-    _ <- printLn("Error: " + message)
-  } yield ()
+  def errorInfoProgran(message: String): Free[Console, Unit] =
+    printLn("Error: " + message)
 
   def currentStatusProgram(m: Machine): Free[Console, Unit] = m match {
     case Machine(locked, candies, coins) if locked => printLn(s"The machine is locked and has $candies candies left")
@@ -60,7 +59,7 @@ object Candy {
   def candyDispencer(m: Machine): Machine = {
     runConsole(printLn(""))
     runConsole(currentStatusProgram(m))
-    val result = runConsole(candyProgram).run(Right(m))
+    val result = runConsole(candyProgram()).run(Right(m))
     result._2 match {
       case Left(message) =>
         runConsole(errorInfoProgran(message))
