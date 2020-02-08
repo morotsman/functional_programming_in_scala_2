@@ -43,8 +43,7 @@ object Factorial6 {
     //runConsole(factorialREPL)
     //Par.run(es)(runConsolePar(factorialREPL))
     //runConsoleReader(factorialREPL).run("q")
-    val tmp: ConsoleState[Unit] = runConsoleState(factorialREPL)
-    val res: (Unit, Buffers) = tmp.run(Buffers(List("1", "3", "6", "q"), List()))
+    val res: (Unit, Buffers) = runConsoleState(factorialREPL).run(Buffers(List("1", "3", "6", "q"), List()))
     println(res._2.out)
   }
 }
