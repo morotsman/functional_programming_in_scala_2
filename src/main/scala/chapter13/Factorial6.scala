@@ -37,7 +37,8 @@ object Factorial6 {
   } yield ()
 
   def main(args: Array[String]): Unit = {
-    runConsole(factorialREPL)
+    //runConsole(factorialREPL)
     //Par.run(es)(runConsolePar(factorialREPL))
+    runConsoleReader(factorialREPL).run("q")
   }
 }
