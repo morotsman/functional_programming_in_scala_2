@@ -2,6 +2,7 @@ package chapter13
 
 import java.util.concurrent.{Executor, Executors}
 
+import chapter3.List
 import chapter13.Free._
 import chapter13.Free.Console._
 import chapter7.Par
@@ -29,9 +30,11 @@ object Factorial6 {
 
   def factorialREPL: Free[Console, Unit] = for {
     _ <- printLn(helpstring)
-    _ <- freeMonad.doWhile { readLn } { line =>
+    _ <- freeMonad.doWhile {
+      readLn
+    } { line =>
       freeMonad.when(line.get != "q") {
-        printLn("factorial: "  + factorial(line.get.toInt).toString)
+        printLn("factorial: " + factorial(line.get.toInt).toString)
       }
     }
   } yield ()
@@ -39,6 +42,9 @@ object Factorial6 {
   def main(args: Array[String]): Unit = {
     //runConsole(factorialREPL)
     //Par.run(es)(runConsolePar(factorialREPL))
-    runConsoleReader(factorialREPL).run("q")
+    //runConsoleReader(factorialREPL).run("q")
+    val tmp: ConsoleState[Unit] = runConsoleState(factorialREPL)
+    val res: (Unit, Buffers) = tmp.run(Buffers(List("1", "3", "6", "q"), List()))
+    println(res._2.out)
   }
 }

@@ -4,6 +4,7 @@ import chapter12.Monad2
 import chapter13.Free.Console.ConsoleIO
 import chapter7.Par
 import chapter7.Par.Par
+import chapter3.{List, Cons, Nil}
 
 import language.higherKinds
 import language.postfixOps
@@ -81,6 +82,32 @@ object Free {
     }
   }
 
+  case class Buffers(in: List[String], out: List[String])
+
+  case class ConsoleState[A](run: Buffers => (A, Buffers)) {
+    def map[B](f: A => B): ConsoleState[B] =
+      ConsoleState(b => {
+        val (a, s) = run(b)
+        (f(a), s)
+      })
+
+    def flatMap[B](f: A => ConsoleState[B]): ConsoleState[B] =
+      ConsoleState(s => {
+        val (a, s1) = run(s)
+        f(a).run(s1)
+      })
+  }
+
+  object ConsoleState {
+    implicit val monad: Monad2[ConsoleState] = new Monad2[ConsoleState] {
+      override def flatMap[A, B](fa: ConsoleState[A])(f: A => ConsoleState[B]): ConsoleState[B] =
+        fa flatMap f
+
+      override def unit[A](a: => A): ConsoleState[A] = ConsoleState(b => {
+        (a, b)
+      })
+    }
+  }
 
   sealed trait Console[A] {
     def toPar: Par[A]
@@ -88,6 +115,8 @@ object Free {
     def toThunk: () => A
 
     def toReader: ConsoleReader[A]
+
+    def toState: ConsoleState[A]
   }
 
   case object ReadLine extends Console[Option[String]] {
@@ -96,6 +125,13 @@ object Free {
     override def toReader: ConsoleReader[Option[String]] = {
       ConsoleReader(a=> Some(a))
     }
+
+    override def toState: ConsoleState[Option[String]] = ConsoleState(b => {
+      b.in match {
+        case Nil => (None, Buffers(b.in.tail(), b.out))
+        case (Cons(a, tail)) => (Some(a), Buffers(b.in.tail(), b.out))
+      }
+    })
 
     override def toThunk: () => Option[String] = () => run
 
@@ -108,6 +144,10 @@ object Free {
 
   case class PrintLine(line: String) extends Console[Unit] {
     override def toPar: Par[Unit] = Par.lazyUnit(println(line))
+
+    override def toState: ConsoleState[Unit] = ConsoleState(b => {
+      ((), Buffers(b.in, Cons(line, b.out)))
+    })
 
     override def toThunk: () => Unit = () => println(line)
 
@@ -175,4 +215,11 @@ object Free {
 
   def runConsoleReader[A](io: ConsoleIO[A]): ConsoleReader[A] =
     runFree[Console, ConsoleReader, A](io)(consoleToReader)(ConsoleReader.monad)
+
+  val consoleToState = new (Console ~> ConsoleState) {
+    override def apply[A](f: Console[A]): ConsoleState[A] = f.toState
+  }
+
+  def runConsoleState[A](io: ConsoleIO[A]): ConsoleState[A] =
+    runFree[Console, ConsoleState, A](io)(consoleToState)(ConsoleState.monad)
 }
