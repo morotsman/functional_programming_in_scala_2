@@ -56,6 +56,7 @@ object Candy {
     case Machine(locked, candies, coins) => printLn(s"The machine is unlocked and has $candies candies left")
   }
 
+  @scala.annotation.tailrec
   def candyDispencer(m: Machine): Machine = {
     runConsole(printLn(""))
     runConsole(currentStatusProgram(m))
