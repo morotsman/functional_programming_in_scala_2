@@ -1,9 +1,14 @@
 package chapter13
 
+import java.util.concurrent.{Executor, Executors}
+
 import chapter13.Free._
 import chapter13.Free.Console._
+import chapter7.Par
 
 object Factorial6 {
+
+  val es = Executors.newFixedThreadPool(1)
 
   val helpstring =
     """
@@ -22,7 +27,7 @@ object Factorial6 {
     go(0, 1)
   }
 
-  def factorialREPL: Free[Console, Unit] =for {
+  def factorialREPL: Free[Console, Unit] = for {
     _ <- printLn(helpstring)
     _ <- freeMonad.doWhile { readLn } { line =>
       freeMonad.when(line.get != "q") {
@@ -33,5 +38,6 @@ object Factorial6 {
 
   def main(args: Array[String]): Unit = {
     runConsole(factorialREPL)
+    //Par.run(es)(runConsolePar(factorialREPL))
   }
 }

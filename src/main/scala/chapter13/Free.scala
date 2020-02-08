@@ -1,7 +1,6 @@
 package chapter13
 
 import chapter12.Monad2
-import chapter6.State
 import chapter7.Par
 import chapter7.Par.Par
 
