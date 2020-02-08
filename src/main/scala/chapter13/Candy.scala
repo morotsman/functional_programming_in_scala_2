@@ -38,13 +38,13 @@ object Candy {
       }
   }
 
-  def candyProgram(): Free[Console, State[Either[String, Machine], (Int, Int)]] =
+  def candyProgram(): Free[Console, State[Either[String, Machine], Unit]] =
     for {
       - <- printLn("Input: c(coin) or t(turn)")
       input <- readLn
-    } yield (State[Either[String, Machine], (Int, Int)] { em: Either[String, Machine] => {
+    } yield (State[Either[String, Machine], Unit] { em: Either[String, Machine] => {
       val machine: Either[String, Machine] = em.flatMap(m => rule(m, input.map(i => if (i == "c") Coin else Turn).get))
-      ((0, 0), machine)
+      ((), machine)
     }
     })
 
