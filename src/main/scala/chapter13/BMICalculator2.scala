@@ -1,10 +1,18 @@
 package chapter13
 
-import chapter13.Free._
 import chapter13.Free.Console._
+import chapter13.Free._
+
 import chapter3.List
 
-object BMICalculator {
+object BMICalculator2 {
+
+  val helpstring =
+    """
+      | The Amazing BMI Calculator
+      | Calculates your BMI
+      |
+  """.trim.stripMargin
 
   def bmi(weight: Int, heightInCm: Int): Double = {
     val heightInMeters = heightInCm.toDouble / 100
@@ -20,7 +28,7 @@ object BMICalculator {
       s"Your overweight, your bmi is: $bmi"
     }
 
-  def bmiProgram(): Free[Console, Unit] = for {
+  def bmiPrompt(): Free[Console, Unit] = for {
     _ <- printLn("Please enter your weight: ")
     weight <- readLn
     _ <- printLn("Please enter your height (cm): ")
@@ -28,11 +36,25 @@ object BMICalculator {
     _ <- printLn(createMessage(bmi(weight.get.toInt, height.get.toInt)))
   } yield ()
 
+  def bmiProgram(): Free[Console, Unit] = for {
+    - <- printLn(helpstring)
+    _ <- freeMonad.doWhile {
+      for {
+        _ <- printLn("q to quit, any other key continue...")
+        v <- readLn
+      } yield v
+    } { line =>
+      freeMonad.when(line.get != "q") {
+        bmiPrompt()
+      }
+    }
+  } yield ()
+
   def main(args: Array[String]): Unit = {
     val program = bmiProgram()
-    runConsole(program)
+    //runConsole(program)
 
-    //val res: (Unit, Buffers) = runConsoleState(program).run(Buffers(List("70", "178"), List()))
+    //val res: (Unit, Buffers) = runConsoleState(program).run(Buffers(List("", "70", "178", "q"), List()))
     //res._2.out.reverse().forEach(a => println(a))
   }
 }
