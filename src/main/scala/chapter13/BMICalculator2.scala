@@ -19,7 +19,9 @@ object BMICalculator2 {
 
   def bmiProgram(): Free[Console, Unit] = for {
     - <- printLn(helpstring)
-    _ <- freeMonad.doWhile(shouldContinue) ( line => freeMonad.when(line.get != "q") { bmiPrompt() })
+    _ <- freeMonad.doWhile(shouldContinue)(line => freeMonad.when(line.get != "q") {
+      bmiPrompt()
+    })
   } yield ()
 
   def shouldContinue: Free[Console, Option[String]] =
@@ -28,25 +30,39 @@ object BMICalculator2 {
       v <- readLn
     } yield v
 
-  def bmiPrompt(): Free[Console, Unit] = for {
-    _ <- printLn("Please enter your weight: ")
-    weight <- readLn
-    _ <- printLn("Please enter your height (cm): ")
-    height <- readLn
-    _ <- printLn(createMessage(bmi(weight.get.toInt, height.get.toInt)))
-  } yield ()
+  def getIntInput(message: String): Free[Console, Int] = {
+    val getInput = for {
+      _ <- printLn(message)
+      oi <- readLn
+    } yield oi
 
-  def bmi(weight: Int, heightInCm: Int): Double = {
-    val heightInMeters = heightInCm.toDouble / 100
-    weight / (heightInMeters * heightInMeters)
+    def isNumeric(input: String): Boolean = input.forall(_.isDigit)
+
+    getInput.flatMap(oi =>
+      if (oi.exists(isNumeric)) {
+        freeMonad.unit(oi.get.toInt)
+      } else {
+        getIntInput(message)
+      })
   }
 
-  def createMessage(bmi: Double): String =
-    if (bmi < 18.5) {
-      s"Sorry, your underweight, your bmi is: $bmi"
-    } else if (bmi >= 18.5 && bmi < 25) {
-      s"Your have normal weight and your bmi is: $bmi"
-    } else {
-      s"Your overweight, your bmi is: $bmi"
+    def bmiPrompt(): Free[Console, Unit] = for {
+      weight <- getIntInput("Please enter your weight: ")
+      height <- getIntInput("Please enter your height (cm): ")
+      _ <- printLn(createMessage(bmi(weight, height)))
+    } yield ()
+
+    def bmi(weight: Int, heightInCm: Int): Double = {
+      val heightInMeters = heightInCm.toDouble / 100
+      weight / (heightInMeters * heightInMeters)
     }
-}
+
+    def createMessage(bmi: Double): String =
+      if (bmi < 18.5) {
+        s"Sorry, your underweight, your bmi is: $bmi"
+      } else if (bmi >= 18.5 && bmi < 25) {
+        s"Your have normal weight and your bmi is: $bmi"
+      } else {
+        s"Your overweight, your bmi is: $bmi"
+      }
+  }
