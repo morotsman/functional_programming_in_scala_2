@@ -1,8 +1,7 @@
 package chapter13
 
-import chapter13.Free.Console.{printLn, _}
+import chapter13.Free.Console._
 import chapter13.Free._
-import chapter3.List
 import chapter4.{Either, Left, Right}
 
 import scala.annotation.tailrec
