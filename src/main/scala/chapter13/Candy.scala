@@ -16,8 +16,9 @@ case class Machine(locked: Boolean, candies: Int, coins: Int)
 object Candy {
 
   def main(args: Array[String]): Unit = {
-    //candyMachine(Machine(true, 10, 0))
+    candyMachine(Machine(true, 10, 0))
 
+    /*
     val res = runConsoleState(candyProgram(Machine(true, 10, 0))).run(Buffers(List("c"), List()))
     println(res._1)
     res._2.out.reverse().forEach(a => println(a))
@@ -29,6 +30,8 @@ object Candy {
     val res3 = runConsoleState(candyProgram(Machine(false, 10, 1))).run(Buffers(List("t"), List()))
     println(res3._1)
     res3._2.out.reverse().forEach(a => println(a))
+   
+     */
   }
 
   def candyMachine(machine: Machine): Unit = {
