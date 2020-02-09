@@ -2,9 +2,6 @@ package chapter13
 
 import chapter13.Free.Console._
 import chapter13.Free._
-import chapter3.List
-
-import scala.annotation.tailrec
 
 object BMICalculator2 {
 
