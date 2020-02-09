@@ -1,6 +1,6 @@
 package chapter13
 
-import chapter13.Free.Console._
+import chapter13.Free.Console.{printLn, _}
 import chapter13.Free._
 import chapter3.List
 import chapter4.{Either, Left, Right}
@@ -19,20 +19,20 @@ object Candy {
     //candyMachine(Machine(true, 10, 0))
 
     val res = runConsoleState(candyProgram(Machine(true, 10, 0))).run(Buffers(List("c"), List()))
-    res._2.out.reverse().forEach(a => println(a))
     println(res._1)
+    res._2.out.reverse().forEach(a => println(a))
 
     val res2 = runConsoleState(candyProgram(Machine(false, 10, 1))).run(Buffers(List("c"), List()))
-    res2._2.out.reverse().forEach(a => println(a))
     println(res2._1)
+    res2._2.out.reverse().forEach(a => println(a))
 
     val res3 = runConsoleState(candyProgram(Machine(false, 10, 1))).run(Buffers(List("t"), List()))
-    res3._2.out.reverse().forEach(a => println(a))
     println(res3._1)
+    res3._2.out.reverse().forEach(a => println(a))
   }
 
   def candyMachine(machine: Machine): Unit = {
-      runConsole(candyProgram(machine)) match {
+    runConsole(candyProgram(machine)) match {
       case Left(_) =>
         candyMachine(machine)
       case Right(newMachine) =>
@@ -41,13 +41,12 @@ object Candy {
   }
 
   def candyProgram(machine: Machine): Free[Console, Either[String, Machine]] = for {
-    _ <- printLn("")
     _ <- showCurrentStatusProgram(machine)
     - <- printLn("Input: c(coin) or t(turn)")
     input <- readLn
     eitherMachine <- freeMonad.unit(rule(machine, input.map(i => if (i == "c") Coin else Turn).get))
     - <- eitherMachine match {
-      case Left (message)  => printLn("Error: " + message)
+      case Left(message) => freeMonad.sequence_(printLn("Error: " + message), printLn(""))
       case _ => printLn("")
     }
   } yield (eitherMachine)
