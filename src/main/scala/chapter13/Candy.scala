@@ -43,9 +43,12 @@ object Candy {
     input <- readLn
   } yield input.map(i => if (i == "c") Coin else Turn).get
 
-  def displayOutcome(machine: Either[String, (String, Machine)]):IOConsole[Unit] = machine match {
-    case Left(message) => freeMonad.sequence_(printLn("Error: " + message), printLn(""))
-    case Right((message, m)) => freeMonad.sequence_(printLn("Success: " + message),printLn(""))
+  def displayOutcome(machine: Either[String, (String, Machine)]):IOConsole[Unit] =
+    freeMonad.sequence_(printLn(outcome(machine)), printLn(""))
+
+  def outcome(machine: Either[String, (String, Machine)]): String = machine match {
+    case Left(message) => "Error: " + message
+    case Right((message, m)) => "Success: " + message
   }
 }
 
