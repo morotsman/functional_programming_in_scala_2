@@ -8,16 +8,6 @@ import chapter13.Free._
 
 class CandyTest extends FunSuite {
 
-  test("testDisplayOutcome") {
-    val res1 = runConsoleState(Candy.displayOutcome(Left("Something went wrong"))).run(Buffers(List(), List()))
-    assert(res1._1 == ())
-    assert(res1._2.out.reverse() == List("Error: Something went wrong", ""))
-
-    val res2 = runConsoleState(Candy.displayOutcome(Right("You got a candy", Machine(true, 10, 1)))).run(Buffers(List(), List()))
-    assert(res2._1 == ())
-    assert(res2._2.out.reverse() == List("Success: You got a candy", ""))
-  }
-
   test("testCandyProgram") {
     val locked = true
     val open = false
@@ -79,6 +69,16 @@ class CandyTest extends FunSuite {
     val res = runConsoleState(Candy.getInput()).run(Buffers(List("c"), List()))
     assert(res._1 == Coin)
     assert(res._2.out == List("Input: c(coin) or t(turn)"))
+  }
+
+  test("testDisplayOutcome") {
+    val res1 = runConsoleState(Candy.displayOutcome(Left("Something went wrong"))).run(Buffers(List(), List()))
+    assert(res1._1 == ())
+    assert(res1._2.out.reverse() == List("Error: Something went wrong", ""))
+
+    val res2 = runConsoleState(Candy.displayOutcome(Right("You got a candy", Machine(true, 10, 1)))).run(Buffers(List(), List()))
+    assert(res2._1 == ())
+    assert(res2._2.out.reverse() == List("Success: You got a candy", ""))
   }
 
   test("applyRule") {
