@@ -60,13 +60,13 @@ class CandyTest extends FunSuite {
   }
 
   test("input t") {
-    val res = runConsoleState(Candy.getInput()).run(Buffers(List("t"), List()))
+    val res = runConsoleState(Candy.getInput).run(Buffers(List("t"), List()))
     assert(res._1 == Turn)
     assert(res._2.out == List("Input: c(coin) or t(turn)"))
   }
 
   test("input c") {
-    val res = runConsoleState(Candy.getInput()).run(Buffers(List("c"), List()))
+    val res = runConsoleState(Candy.getInput).run(Buffers(List("c"), List()))
     assert(res._1 == Coin)
     assert(res._2.out == List("Input: c(coin) or t(turn)"))
   }

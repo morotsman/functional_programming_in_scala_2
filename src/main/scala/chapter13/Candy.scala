@@ -25,7 +25,7 @@ object Candy {
 
   def candyProgram(machine: Machine): IOConsole[Either[String, Machine]] = for {
     _ <- showCurrentStatus(machine)
-    input <- getInput()
+    input <- getInput
     newMachine <- freeMonad.unit(Rule.applyRule(machine, input))
     _ <- displayOutcome(newMachine)
   } yield (newMachine.map(m => m._2))
@@ -38,7 +38,7 @@ object Candy {
     case Machine(locked, candies, coins) => s"The machine is unlocked and has $candies candies left"
   }
 
-  def getInput(): IOConsole[Input] = for {
+  def getInput: IOConsole[Input] = for {
     - <- printLn("Input: c(coin) or t(turn)")
     input <- readLn
   } yield input.map(i => if (i == "c") Coin else Turn).get
