@@ -17,34 +17,17 @@ case class Machine(locked: Boolean, candies: Int, coins: Int)
 
 object Candy {
 
-  def main(args: Array[String]): Unit = {
+  def main(args: Array[String]): Unit =
     candyMachine(Machine(true, 10, 0))
 
-    /*
-    val res = runConsoleState(candyProgram(Machine(true, 10, 0))).run(Buffers(List("c"), List()))
-    println(res._1)
-    res._2.out.reverse().forEach(a => println(a))
-
-    val res2 = runConsoleState(candyProgram(Machine(false, 10, 1))).run(Buffers(List("c"), List()))
-    println(res2._1)
-    res2._2.out.reverse().forEach(a => println(a))
-
-    val res3 = runConsoleState(candyProgram(Machine(false, 10, 1))).run(Buffers(List("t"), List()))
-    println(res3._1)
-    res3._2.out.reverse().forEach(a => println(a))
-
-     */
-  }
-
   @tailrec
-  def candyMachine(machine: Machine): Unit = {
+  def candyMachine(machine: Machine): Unit =
     candyMachine(runConsole(candyProgram(machine)).getOrElse(machine))
-  }
 
   def candyProgram(machine: Machine): Free[Console, Either[String, Machine]] = for {
     _ <- showCurrentStatus(machine)
     input <- getInput()
-    newMachine <- freeMonad.unit(applyRule(machine, input))
+    newMachine <- freeMonad.unit(Rule.applyRule(machine, input))
     _ <- displayOutcome(newMachine)
   } yield (newMachine.map(m => m._2))
 
@@ -62,8 +45,10 @@ object Candy {
     case Left(message) => freeMonad.sequence_(printLn("Error: " + message), printLn(""))
     case Right((message, m)) => freeMonad.sequence_(printLn("Success: " + message),printLn(""))
   }
+}
 
-  private def applyRule(machine: Machine, input: Input): Either[String, (String, Machine)] = input match {
+object Rule {
+  def applyRule(machine: Machine, input: Input): Either[String, (String, Machine)] = input match {
     case Coin =>
       if (machine.candies == 0) {
         Left("No candies Left")
@@ -83,4 +68,5 @@ object Candy {
         Left("You need to dispose a coin to get a candy")
       }
   }
+
 }
