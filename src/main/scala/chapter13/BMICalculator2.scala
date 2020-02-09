@@ -7,7 +7,7 @@ import chapter3.List
 
 object BMICalculator2 {
 
-  val helpstring =
+  val helpstring: String =
     """
       | The Amazing BMI Calculator
       | Calculates your BMI
@@ -19,14 +19,10 @@ object BMICalculator2 {
 
   def bmiProgram(): Free[Console, Unit] = for {
     - <- printLn(helpstring)
-    _ <- freeMonad.doWhile(getInput()) { line =>
-      freeMonad.when(line.get != "q") {
-        bmiPrompt()
-      }
-    }
+    _ <- freeMonad.doWhile(shouldContinue) ( line => freeMonad.when(line.get != "q") { bmiPrompt() })
   } yield ()
 
-  def getInput(): Free[Console, Option[String]] =
+  def shouldContinue: Free[Console, Option[String]] =
     for {
       _ <- printLn("q to quit, any other key continue...")
       v <- readLn

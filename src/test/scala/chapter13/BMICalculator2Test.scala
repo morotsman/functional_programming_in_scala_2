@@ -6,9 +6,6 @@ import org.scalatest.FunSuite
 
 class BMICalculator2Test extends FunSuite {
 
-  test("testCreateMessage") {
-
-  }
 
   test("single run") {
     val res: (Unit, Buffers) = runConsoleState(BMICalculator2.bmiProgram()).run(Buffers(List("", "70", "178", "q"), List()))
@@ -42,19 +39,4 @@ class BMICalculator2Test extends FunSuite {
     ))
   }
 
-  test("testBmiPrompt") {
-
-  }
-
-  test("testBmi") {
-
-  }
-
-  test("testGetInput") {
-
-  }
-
-  test("testHelpstring") {
-
-  }
 }
