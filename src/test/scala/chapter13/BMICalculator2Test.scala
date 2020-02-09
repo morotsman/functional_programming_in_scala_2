@@ -39,4 +39,19 @@ class BMICalculator2Test extends FunSuite {
     ))
   }
 
+  test("wrong input") {
+    val res: (Unit, Buffers) = runConsoleState(BMICalculator2.bmiProgram()).run(Buffers(List("", "a", "70", "", "b", "178", "q"), List()))
+    assert(res._2.out.reverse() == List(
+      BMICalculator2.helpstring,
+      "q to quit, any other key continue...",
+      "Please enter your weight: ",
+      "Please enter your weight: ",
+      "Please enter your height (cm): ",
+      "Please enter your height (cm): ",
+      "Please enter your height (cm): ",
+      "Your have normal weight and your bmi is: 22.093170054286073",
+      "q to quit, any other key continue..."
+    ))
+  }
+
 }
