@@ -17,6 +17,11 @@ sealed trait Either[+E, +A] {
     case _ => this
   }
 
+  def getOrElse[B >: A](b: B): B = this match {
+    case Left(e) => b
+    case Right(a) => a
+  }
+
   def map2[EE >: E, B, C](b: Either[EE, B])(f: (A,B) => C): Either[EE, C] = (this, b) match {
     case (Right(a), Right(b)) => Right(f(a,b))
     case (Left(e), _) => Left(e)

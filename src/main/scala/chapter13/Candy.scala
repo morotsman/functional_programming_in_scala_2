@@ -30,17 +30,13 @@ object Candy {
     val res3 = runConsoleState(candyProgram(Machine(false, 10, 1))).run(Buffers(List("t"), List()))
     println(res3._1)
     res3._2.out.reverse().forEach(a => println(a))
-   
+
      */
   }
 
   def candyMachine(machine: Machine): Unit = {
-    runConsole(candyProgram(machine)) match {
-      case Left(_) =>
-        candyMachine(machine)
-      case Right(newMachine) =>
-        candyMachine(newMachine)
-    }
+    val result = runConsole(candyProgram(machine))
+    candyMachine(result.getOrElse(machine))
   }
 
   def candyProgram(machine: Machine): Free[Console, Either[String, Machine]] = for {
