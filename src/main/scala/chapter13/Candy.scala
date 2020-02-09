@@ -5,6 +5,8 @@ import chapter13.Free._
 import chapter3.List
 import chapter4.{Either, Left, Right}
 
+import scala.annotation.tailrec
+
 sealed trait Input
 
 case object Coin extends Input
@@ -34,6 +36,7 @@ object Candy {
      */
   }
 
+  @tailrec
   def candyMachine(machine: Machine): Unit = {
     candyMachine(runConsole(candyProgram(machine)).getOrElse(machine))
   }
