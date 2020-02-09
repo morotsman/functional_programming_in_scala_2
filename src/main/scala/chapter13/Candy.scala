@@ -41,29 +41,34 @@ object Candy {
   }
 
   def candyProgram(machine: Machine): Free[Console, Either[String, Machine]] = for {
-    _ <- showCurrentStatusProgram(machine)
-    - <- printLn("Input: c(coin) or t(turn)")
-    input <- readLn
-    eitherMachine <- freeMonad.unit(rule(machine, input.map(i => if (i == "c") Coin else Turn).get))
-    - <- eitherMachine match {
-      case Left(message) => freeMonad.sequence_(printLn("Error: " + message), printLn(""))
-      case _ => printLn("")
-    }
-  } yield (eitherMachine)
+    _ <- showCurrentStatus(machine)
+    input <- getInput()
+    newMachine <- freeMonad.unit(applyRule(machine, input))
+    _ <- displayOutcome(newMachine)
+  } yield (newMachine.map(m => m._2))
 
-  def showCurrentStatusProgram(m: Machine): Free[Console, Unit] = m match {
+  def showCurrentStatus(m: Machine): Free[Console, Unit] = m match {
     case Machine(locked, candies, coins) if locked => printLn(s"The machine is locked and has $candies candies left")
     case Machine(locked, candies, coins) => printLn(s"The machine is unlocked and has $candies candies left")
   }
 
+  def getInput(): Free[Console, Input] = for {
+    - <- printLn("Input: c(coin) or t(turn)")
+    input <- readLn
+  } yield input.map(i => if (i == "c") Coin else Turn).get
 
-  private def rule(machine: Machine, input: Input): Either[String, Machine] = input match {
+  def displayOutcome(machine: Either[String, (String, Machine)]):Free[Console, Unit] = machine match {
+    case Left(message) => freeMonad.sequence_(printLn("Error: " + message), printLn(""))
+    case Right((message, m)) => freeMonad.sequence_(printLn("Success: " + message),printLn(""))
+  }
+
+  private def applyRule(machine: Machine, input: Input): Either[String, (String, Machine)] = input match {
     case Coin =>
       if (machine.candies == 0) {
         Left("No candies Left")
       } else if (machine.locked) {
         val unlocked = false
-        Right(Machine(unlocked, machine.candies, machine.coins + 1))
+        Right("Unlocked, turn to get your candy", Machine(unlocked, machine.candies, machine.coins + 1))
       } else {
         Left("Could not accept coin, turn to get a candy")
       }
@@ -72,7 +77,7 @@ object Candy {
         Left("No candies Left")
       } else if (!machine.locked) {
         val locked = true
-        Right(Machine(locked, machine.candies - 1, machine.coins))
+        Right("Here is your candy", Machine(locked, machine.candies - 1, machine.coins))
       } else {
         Left("You need to dispose a coin to get a candy")
       }
