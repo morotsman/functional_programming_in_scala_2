@@ -3,7 +3,7 @@ package chapter13
 import chapter12.Monad2
 import chapter13.Free.Console._
 import chapter13.Free._
-import chapter6.{Machine, State}
+import chapter6.{State}
 import chapter3.List
 import chapter4.{Either, Left, Right}
 
@@ -56,25 +56,33 @@ object Candy {
     case Machine(locked, candies, coins) => printLn(s"The machine is unlocked and has $candies candies left")
   }
 
-  @scala.annotation.tailrec
-  def candyDispencer(m: Machine): Machine = {
-    runConsole(printLn(""))
-    runConsole(currentStatusProgram(m))
-    val result = runConsole(candyProgram()).run(Right(m))
-    result._2 match {
+  def input(machine: Free[Console, Machine]): Free[Console, Either[String, Machine]] = for {
+    oldMachine <- machine
+    _ <- printLn("")
+    _ <- currentStatusProgram(oldMachine)
+    program <- candyProgram().map(a => a.run(Right(oldMachine)))
+  } yield (program._2)
+
+  def candyMachine(machine: Free[Console, Machine]): Unit = {
+      runConsole(input(machine)) match {
       case Left(message) =>
-        runConsole(errorInfoProgram(message))
-        candyDispencer(m)
+        runConsole(errorInfoProgram("Error: " + message))
+        candyMachine(machine)
       case Right(m) =>
-        candyDispencer(m)
+        candyMachine(freeMonad.unit(m))
+        m
     }
   }
 
   def main(args: Array[String]): Unit = {
-    candyDispencer(Machine(true, 10, 0))
+    candyMachine(freeMonad.unit(Machine(true, 10, 0)))
 
-    //val res = runConsoleState(candyProgram()).run(Buffers(List("c"), List()))
+    //val res = runConsoleState(input(freeMonad.unit(Machine(true, 10, 0)))).run(Buffers(List("c"), List()))
     //res._2.out.reverse().forEach(a => println(a))
-    //println(res._1.run(Machine(true, 10, 0)))
+    //println(res)
+
+    //val res2 = runConsoleState(input(freeMonad.unit(Machine(false, 10, 0)))).run(Buffers(List("c"), List()))
+    //res2._2.out.reverse().forEach(a => println(a))
+    //println(res2)
   }
 }
