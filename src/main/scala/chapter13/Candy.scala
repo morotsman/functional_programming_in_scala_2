@@ -1,6 +1,5 @@
 package chapter13
 
-import chapter12.Monad2
 import chapter13.Free.Console._
 import chapter13.Free._
 import chapter6.{State}
@@ -51,7 +50,7 @@ object Candy {
   def errorInfoProgram(message: String): Free[Console, Unit] =
     printLn("Error: " + message)
 
-  def currentStatusProgram(m: Machine): Free[Console, Unit] = m match {
+  def showCurrentStatusProgram(m: Machine): Free[Console, Unit] = m match {
     case Machine(locked, candies, coins) if locked => printLn(s"The machine is locked and has $candies candies left")
     case Machine(locked, candies, coins) => printLn(s"The machine is unlocked and has $candies candies left")
   }
@@ -59,9 +58,9 @@ object Candy {
   def input(machine: Machine): Free[Console, Either[String, Machine]] = for {
     oldMachine <- freeMonad.unit(machine)
     _ <- printLn("")
-    _ <- currentStatusProgram(oldMachine)
-    program <- candyProgram().map(a => a.run(Right(oldMachine)))
-  } yield (program._2)
+    _ <- showCurrentStatusProgram(oldMachine)
+    result <- candyProgram().map(a => a.run(Right(oldMachine)))
+  } yield (result._2)
 
   def candyMachine(machine: Machine): Unit = {
       runConsole(input(machine)) match {
