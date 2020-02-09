@@ -14,6 +14,32 @@ object BMICalculator2 {
       |
   """.trim.stripMargin
 
+  def main(args: Array[String]): Unit =
+    runConsole(bmiProgram())
+
+  def bmiProgram(): Free[Console, Unit] = for {
+    - <- printLn(helpstring)
+    _ <- freeMonad.doWhile(getInput()) { line =>
+      freeMonad.when(line.get != "q") {
+        bmiPrompt()
+      }
+    }
+  } yield ()
+
+  def getInput(): Free[Console, Option[String]] =
+    for {
+      _ <- printLn("q to quit, any other key continue...")
+      v <- readLn
+    } yield v
+
+  def bmiPrompt(): Free[Console, Unit] = for {
+    _ <- printLn("Please enter your weight: ")
+    weight <- readLn
+    _ <- printLn("Please enter your height (cm): ")
+    height <- readLn
+    _ <- printLn(createMessage(bmi(weight.get.toInt, height.get.toInt)))
+  } yield ()
+
   def bmi(weight: Int, heightInCm: Int): Double = {
     val heightInMeters = heightInCm.toDouble / 100
     weight / (heightInMeters * heightInMeters)
@@ -27,34 +53,4 @@ object BMICalculator2 {
     } else {
       s"Your overweight, your bmi is: $bmi"
     }
-
-  def bmiPrompt(): Free[Console, Unit] = for {
-    _ <- printLn("Please enter your weight: ")
-    weight <- readLn
-    _ <- printLn("Please enter your height (cm): ")
-    height <- readLn
-    _ <- printLn(createMessage(bmi(weight.get.toInt, height.get.toInt)))
-  } yield ()
-
-  def bmiProgram(): Free[Console, Unit] = for {
-    - <- printLn(helpstring)
-    _ <- freeMonad.doWhile {
-      for {
-        _ <- printLn("q to quit, any other key continue...")
-        v <- readLn
-      } yield v
-    } { line =>
-      freeMonad.when(line.get != "q") {
-        bmiPrompt()
-      }
-    }
-  } yield ()
-
-  def main(args: Array[String]): Unit = {
-    val program = bmiProgram()
-    //runConsole(program)
-
-    //val res: (Unit, Buffers) = runConsoleState(program).run(Buffers(List("", "70", "178", "q"), List()))
-    //res._2.out.reverse().forEach(a => println(a))
-  }
 }
