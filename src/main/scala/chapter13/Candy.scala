@@ -70,7 +70,6 @@ object Candy {
         candyMachine(machine)
       case Right(m) =>
         candyMachine(m)
-        m
     }
   }
 
@@ -79,10 +78,14 @@ object Candy {
 
     val res = runConsoleState(input(Machine(true, 10, 0))).run(Buffers(List("c"), List()))
     res._2.out.reverse().forEach(a => println(a))
-    println(res)
+    println(res._1)
 
-    val res2 = runConsoleState(input(Machine(false, 10, 0))).run(Buffers(List("c"), List()))
+    val res2 = runConsoleState(input(Machine(false, 10, 1))).run(Buffers(List("c"), List()))
     res2._2.out.reverse().forEach(a => println(a))
-    println(res2)
+    println(res2._1)
+
+    val res3 = runConsoleState(input(Machine(false, 10, 1))).run(Buffers(List("t"), List()))
+    res3._2.out.reverse().forEach(a => println(a))
+    println(res3._1)
   }
 }
