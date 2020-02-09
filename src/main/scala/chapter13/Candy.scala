@@ -30,9 +30,12 @@ object Candy {
     _ <- displayOutcome(newMachine)
   } yield (newMachine.map(m => m._2))
 
-  def showCurrentStatus(m: Machine): IOConsole[Unit] = m match {
-    case Machine(locked, candies, coins) if locked => printLn(s"The machine is locked and has $candies candies left")
-    case Machine(locked, candies, coins) => printLn(s"The machine is unlocked and has $candies candies left")
+  def showCurrentStatus(m: Machine): IOConsole[Unit] =
+    printLn(statusMessage(m))
+
+  def statusMessage(m: Machine): String = m match {
+    case Machine(locked, candies, coins) if locked => s"The machine is locked and has $candies candies left"
+    case Machine(locked, candies, coins) => s"The machine is unlocked and has $candies candies left"
   }
 
   def getInput(): IOConsole[Input] = for {
