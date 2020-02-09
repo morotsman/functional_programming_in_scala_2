@@ -20,7 +20,7 @@ object BMICalculator {
       s"Your overweight, your bmi is: $bmi"
     }
 
-  def bmiProgram(): Free[Console, Unit] = for {
+  def bmiProgram(): IOConsole[Unit] = for {
     _ <- printLn("Please enter your weight: ")
     weight <- readLn
     _ <- printLn("Please enter your height (cm): ")

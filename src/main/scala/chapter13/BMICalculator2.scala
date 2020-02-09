@@ -15,26 +15,26 @@ object BMICalculator2 {
   def main(args: Array[String]): Unit =
     runConsole(bmiProgram())
 
-  def bmiProgram(): Free[Console, Unit] = for {
+  def bmiProgram(): IOConsole[Unit] = for {
     - <- printLn(helpstring)
     _ <- freeMonad.doWhile(shouldContinue)(line => freeMonad.when(line.get != "q") {
       bmiPrompt()
     })
   } yield ()
 
-  def shouldContinue: Free[Console, Option[String]] =
+  def shouldContinue: IOConsole[Option[String]] =
     for {
       _ <- printLn("q to quit, any other key continue...")
       v <- readLn
     } yield v
 
-  def bmiPrompt(): Free[Console, Unit] = for {
+  def bmiPrompt(): IOConsole[Unit] = for {
     weight <- getIntInput("Please enter your weight: ")
     height <- getIntInput("Please enter your height (cm): ")
     _ <- printLn(createMessage(bmi(weight, height)))
   } yield ()
 
-  def getIntInput(message: String): Free[Console, Int] = {
+  def getIntInput(message: String): IOConsole[Int] = {
     val getInput = for {
       _ <- printLn(message)
       oi <- readLn

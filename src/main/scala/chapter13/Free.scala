@@ -222,4 +222,8 @@ object Free {
 
   def runConsoleState[A](io: ConsoleIO[A]): ConsoleState[A] =
     runFree[Console, ConsoleState, A](io)(consoleToState)(ConsoleState.monad)
+
+  type IO[A] = Free[Par, A]
+  type IOConsole[A] = Free[Console, A]
+
 }

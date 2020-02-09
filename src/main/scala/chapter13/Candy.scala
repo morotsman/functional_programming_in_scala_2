@@ -23,24 +23,24 @@ object Candy {
   def candyMachine(machine: Machine): Unit =
     candyMachine(runConsole(candyProgram(machine)).getOrElse(machine))
 
-  def candyProgram(machine: Machine): Free[Console, Either[String, Machine]] = for {
+  def candyProgram(machine: Machine): IOConsole[Either[String, Machine]] = for {
     _ <- showCurrentStatus(machine)
     input <- getInput()
     newMachine <- freeMonad.unit(Rule.applyRule(machine, input))
     _ <- displayOutcome(newMachine)
   } yield (newMachine.map(m => m._2))
 
-  def showCurrentStatus(m: Machine): Free[Console, Unit] = m match {
+  def showCurrentStatus(m: Machine): IOConsole[Unit] = m match {
     case Machine(locked, candies, coins) if locked => printLn(s"The machine is locked and has $candies candies left")
     case Machine(locked, candies, coins) => printLn(s"The machine is unlocked and has $candies candies left")
   }
 
-  def getInput(): Free[Console, Input] = for {
+  def getInput(): IOConsole[Input] = for {
     - <- printLn("Input: c(coin) or t(turn)")
     input <- readLn
   } yield input.map(i => if (i == "c") Coin else Turn).get
 
-  def displayOutcome(machine: Either[String, (String, Machine)]):Free[Console, Unit] = machine match {
+  def displayOutcome(machine: Either[String, (String, Machine)]):IOConsole[Unit] = machine match {
     case Left(message) => freeMonad.sequence_(printLn("Error: " + message), printLn(""))
     case Right((message, m)) => freeMonad.sequence_(printLn("Success: " + message),printLn(""))
   }
