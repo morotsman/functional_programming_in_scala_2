@@ -56,33 +56,33 @@ object Candy {
     case Machine(locked, candies, coins) => printLn(s"The machine is unlocked and has $candies candies left")
   }
 
-  def input(machine: Free[Console, Machine]): Free[Console, Either[String, Machine]] = for {
-    oldMachine <- machine
+  def input(machine: Machine): Free[Console, Either[String, Machine]] = for {
+    oldMachine <- freeMonad.unit(machine)
     _ <- printLn("")
     _ <- currentStatusProgram(oldMachine)
     program <- candyProgram().map(a => a.run(Right(oldMachine)))
   } yield (program._2)
 
-  def candyMachine(machine: Free[Console, Machine]): Unit = {
+  def candyMachine(machine: Machine): Unit = {
       runConsole(input(machine)) match {
       case Left(message) =>
         runConsole(errorInfoProgram("Error: " + message))
         candyMachine(machine)
       case Right(m) =>
-        candyMachine(freeMonad.unit(m))
+        candyMachine(m)
         m
     }
   }
 
   def main(args: Array[String]): Unit = {
-    candyMachine(freeMonad.unit(Machine(true, 10, 0)))
+    //candyMachine(Machine(true, 10, 0))
 
-    //val res = runConsoleState(input(freeMonad.unit(Machine(true, 10, 0)))).run(Buffers(List("c"), List()))
-    //res._2.out.reverse().forEach(a => println(a))
-    //println(res)
+    val res = runConsoleState(input(Machine(true, 10, 0))).run(Buffers(List("c"), List()))
+    res._2.out.reverse().forEach(a => println(a))
+    println(res)
 
-    //val res2 = runConsoleState(input(freeMonad.unit(Machine(false, 10, 0)))).run(Buffers(List("c"), List()))
-    //res2._2.out.reverse().forEach(a => println(a))
-    //println(res2)
+    val res2 = runConsoleState(input(Machine(false, 10, 0))).run(Buffers(List("c"), List()))
+    res2._2.out.reverse().forEach(a => println(a))
+    println(res2)
   }
 }
