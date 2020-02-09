@@ -35,8 +35,7 @@ object Candy {
   }
 
   def candyMachine(machine: Machine): Unit = {
-    val result = runConsole(candyProgram(machine))
-    candyMachine(result.getOrElse(machine))
+    candyMachine(runConsole(candyProgram(machine)).getOrElse(machine))
   }
 
   def candyProgram(machine: Machine): Free[Console, Either[String, Machine]] = for {
