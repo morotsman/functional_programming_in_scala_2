@@ -117,8 +117,15 @@ object Par {
     }
   }
 
-  def delay[A](fa: => Par[A]): Par[A] =
-    es => fa(es)
+  def async[A](f: (A => Unit) => Unit): Par[A] = es => new Future[A] {
+    def apply(k: A => Unit) = f(k)
+  }
+
+  def delay[A](a: => A): Par[A] =
+    es => new Future[A] {
+      def apply(cb: A => Unit): Unit =
+        cb(a)
+    }
 
   def run[A](es: ExecutorService)(pa: Par[A]): A = {
     val ref = new AtomicReference[A]()

@@ -1,10 +1,12 @@
 package chapter13
 
+import java.util.concurrent.ExecutorService
+
 import chapter12.Monad2
 import chapter13.Free.Console.ConsoleIO
 import chapter7.Par
 import chapter7.Par.Par
-import chapter3.{List, Cons, Nil}
+import chapter3.{Cons, List, Nil}
 
 import language.higherKinds
 import language.postfixOps
@@ -225,5 +227,14 @@ object Free {
 
   type IO[A] = Free[Par, A]
   type IOConsole[A] = Free[Console, A]
+
+  def unsafePerformIO[A](a: IO[A])(pool: ExecutorService): A =
+    Par.run(pool)(run(a)(Monad2.parMonad))
+
+  // Provides the `IO { ... }` syntax for synchronous IO blocks.
+  def IO[A](a: => A): IO[A] = Suspend { Par.delay(a) }
+
+  def Async[A](cb: (A => Unit) => Unit): IO[A] =
+    Suspend(Par.async(cb))
 
 }
