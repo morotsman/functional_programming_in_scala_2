@@ -11,7 +11,7 @@ class Lines extends FunSuite{
 
   val es = Executors.newFixedThreadPool(1)
 
-  def linesGt40k(filename: String): IO[Boolean] = IO {
+  def linesGt2(filename: String): IO[Boolean] = IO {
     // There are a number of convenience functions in scala.io.Source
     // for reading from external sources such as files.
     val src = io.Source.fromResource(filename)
@@ -23,12 +23,12 @@ class Lines extends FunSuite{
         lines.next // has side effect of advancing to next element
         count += 1
       }
-      count > 40000
+      count > 2
     }
     finally src.close
   }
 
   test("") {
-    assert(!unsafePerformIO(linesGt40k("test.txt"))(es))
+    assert(unsafePerformIO(linesGt2("test.txt"))(es))
   }
 }
