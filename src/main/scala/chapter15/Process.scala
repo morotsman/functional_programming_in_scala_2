@@ -50,6 +50,18 @@ object Process {
 
     go(0.0)
   }
+
+  def take[I](n: Int): Process[I, I] = ???
+
+  def drop[I](n: Int): Process[I, I] = ???
+
+  def takeWhile[I](f: I => Boolean): Process[I, I] = ???
+
+  def dropWhile[I](f: I => Boolean): Process[I, I] = ???
+
+  def count[I]: Process[I, Int] = ???
+
+  def mean: Process[Double, Double] = ???
 }
 
 
