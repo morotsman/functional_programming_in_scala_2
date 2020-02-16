@@ -55,4 +55,9 @@ class ProcessTest extends FunSuite {
     assert(Stream() == Process.count(Stream()))
   }
 
+  test("mean") {
+    val stream = Stream(1.0, 1.0, 2.0, 2.0)
+    assert(Stream(1.0, 1.0, 1.3333333333333333, 1.5) == Process.mean(stream))
+  }
+
 }
