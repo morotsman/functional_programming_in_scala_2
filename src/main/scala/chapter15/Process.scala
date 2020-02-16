@@ -51,15 +51,46 @@ object Process {
     go(0.0)
   }
 
-  def take[I](n: Int): Process[I, I] = ???
+  def take[I](n: Int): Process[I, I] = {
+    def go(index: Int): Process[I, I] =
+      Await {
+        case Some(i) if index < n => Emit(i, go(index + 1))
+        case _ => Halt()
+      }
 
-  def drop[I](n: Int): Process[I, I] = ???
+    go(0)
+  }
 
-  def takeWhile[I](f: I => Boolean): Process[I, I] = ???
+  def drop[I](n: Int): Process[I, I] = {
+    def go(index: Int): Process[I, I] =
+      Await {
+        case Some(i) if index < n => go(index + 1)
+        case Some(i) => Emit(i, go(index))
+        case None => Halt()
+      }
 
-  def dropWhile[I](f: I => Boolean): Process[I, I] = ???
+    go(0)
+  }
 
-  def count[I]: Process[I, Int] = ???
+  def takeWhile[I](f: I => Boolean): Process[I, I] = Await {
+    case Some(i) if f(i) => Emit(i, takeWhile(f))
+    case _ => Halt()
+  }
+
+  def dropWhile[I](f: I => Boolean): Process[I, I] = Await {
+    case Some(i) if f(i) => dropWhile(f)
+    case Some(i) => Emit(i, dropWhile(f))
+    case None => Halt()
+  }
+
+  def count[I]: Process[I, Int] = {
+    def go(index: Int): Process[I, Int] = Await {
+      case None => Halt()
+      case Some(i) => Emit(index, go(index+ 1))
+    }
+
+    go(1)
+  }
 
   def mean: Process[Double, Double] = ???
 }

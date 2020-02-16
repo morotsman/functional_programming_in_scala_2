@@ -19,4 +19,40 @@ class ProcessTest extends FunSuite {
     assert(Stream(1.0, 3.0, 6.0, 10.0) == Process.sum(Stream(1.0, 2.0, 3.0, 4.0)))
   }
 
+  test("take") {
+    val stream = Stream(1, 2, 3, 4)
+    assert(stream == Process.take(6)(stream))
+    assert(Stream(1, 2) == Process.take(2)(stream))
+    assert(Stream() == Process.take(0)(stream))
+  }
+
+  test("drop") {
+    val stream = Stream(1.0, 2.0, 3.0, 4.0)
+    assert(stream == Process.drop(0)(stream))
+    assert(Stream(3.0, 4.0) == Process.drop(2)(stream))
+    assert(Stream() == Process.drop(6)(stream))
+
+    assert(Stream(1.0, 3.0) == Process.take(2)(Process.sum(stream)))
+  }
+
+  test("takeWhile") {
+    val stream = Stream(1, 2, 3, 4)
+    assert(stream == Process.takeWhile((_: Int) => true)(stream))
+    assert(Stream(1, 2) == Process.takeWhile((i: Int) => i < 3)(stream))
+    assert(Stream() == Process.takeWhile((i: Int) => i < 0)(stream))
+  }
+
+  test("dropWhile") {
+    val stream = Stream(1, 2, 3, 4)
+    assert(stream == Process.dropWhile((_: Int) => false)(stream))
+    assert(Stream(3, 4) == Process.dropWhile((i: Int) => i < 3)(stream))
+    assert(Stream() == Process.dropWhile((i: Int) => i < 6)(stream))
+  }
+
+  test("count") {
+    val stream = Stream("a", "b", "c", "d")
+    assert(Stream(1, 2, 3, 4) == Process.count(stream))
+    assert(Stream() == Process.count(Stream()))
+  }
+
 }
