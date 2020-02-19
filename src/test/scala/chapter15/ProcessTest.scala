@@ -70,4 +70,17 @@ class ProcessTest extends FunSuite {
     assert(Stream() == Process.countInTermsOfLoop(Stream()))
   }
 
+  test("forEach") {
+    val stream = Stream("aa", "b", "cccc", "ddd")
+
+    assert(stream == Process.forEach()(stream))
+  }
+
+  test("map") {
+    val stream = Stream("aa", "b", "cccc", "ddd")
+
+    val process = Process.forEach().map((i: String) => i.length)
+
+    assert(Stream(2, 1, 4, 3) == process(stream))
+  }
 }

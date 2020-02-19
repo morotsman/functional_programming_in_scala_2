@@ -1,6 +1,7 @@
 package chapter15
 
 sealed trait Process[I, O] {
+  import Process._
 
   def apply(s: Stream[I]): Stream[O] = this match {
     case Halt() => Stream()
@@ -35,6 +36,8 @@ sealed trait Process[I, O] {
       }
     }
   }
+
+  def map[O2](f: O => O2): Process[I, O2] = this |> lift(f)
 }
 
 object Process {
@@ -61,6 +64,16 @@ object Process {
       }
 
     go(0.0)
+  }
+
+  def forEach[I](): Process[I, I] = {
+    def go(index: Int): Process[I, I] =
+      Await {
+        case Some(i) => Emit(i, go(index + 1))
+        case _ => Halt()
+      }
+
+    go(0)
   }
 
   def take[I](n: Int): Process[I, I] = {
