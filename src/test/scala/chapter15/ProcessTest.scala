@@ -60,4 +60,14 @@ class ProcessTest extends FunSuite {
     assert(Stream(1.0, 1.0, 1.3333333333333333, 1.5) == Process.mean(stream))
   }
 
+  test("sumInTermsOfLoop") {
+    assert(Stream(1.0, 3.0, 6.0, 10.0) == Process.sumInTermsOfLoop(Stream(1.0, 2.0, 3.0, 4.0)))
+  }
+
+  test("countInTermsOfLoop") {
+    val stream = Stream("a", "b", "c", "d")
+    assert(Stream(1, 2, 3, 4) == Process.countInTermsOfLoop(stream))
+    assert(Stream() == Process.countInTermsOfLoop(Stream()))
+  }
+
 }

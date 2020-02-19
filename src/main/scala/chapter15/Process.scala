@@ -23,6 +23,18 @@ sealed trait Process[I, O] {
 
     go(this)
   }
+
+  def |>[O2](p2: Process[O,O2]): Process[I,O2] = {
+    p2 match {
+      case Halt() => Halt()
+      case Emit(h,t) => Emit(h, this |> t)
+      case Await(f) => this match {
+        case Emit(h,t) => t |> f(Some(h))
+        case Halt() => Halt() |> f(None)
+        case Await(g) => Await((i: Option[I]) => g(i) |> p2)
+      }
+    }
+  }
 }
 
 object Process {
@@ -101,22 +113,27 @@ object Process {
     go(0.0, 0.0)
   }
 
-  def emit[I,O](head: O,
-                tail: Process[I,O] = Halt[I,O]()): Process[I,O] =
+  def emit[I, O](head: O,
+                 tail: Process[I, O] = Halt[I, O]()): Process[I, O] =
     Emit(head, tail)
 
-  def await[I,O](f: I => Process[I,O], fallback: Process[I,O] = Halt[I,O]()): Process[I,O] =
-    Await[I,O] {
+  def await[I, O](f: I => Process[I, O], fallback: Process[I, O] = Halt[I, O]()): Process[I, O] =
+    Await[I, O] {
       case Some(i) => f(i)
       case None => fallback
     }
 
-  def loop[S,I,O](z: S)(f: (I,S) => (O,S)): Process[I,O] =
-    await((i: I) => f(i,z) match {
-      case (o,s2) => emit(o, loop(s2)(f))
+  def loop[S, I, O](z: S)(f: (I, S) => (O, S)): Process[I, O] =
+    await((i: I) => f(i, z) match {
+      case (o, s2) => emit(o, loop(s2)(f))
     })
 
-  
+  def sumInTermsOfLoop: Process[Double, Double] =
+    loop(0.0)((i, s) => (i + s, i + s))
+
+  def countInTermsOfLoop[I]: Process[I, Int] =
+    loop(0)((_, s) => (s + 1, s + 1))
+
 }
 
 
