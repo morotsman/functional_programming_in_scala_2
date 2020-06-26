@@ -114,7 +114,7 @@ class MonadTest extends FunSuite {
       ((1, ticket.numberOfMatches), ticket)
     })).run(lotteryTicket)
 
-    assert(result == (List((1,1), (1,2), (1,3), (1,4), (1,5), (1,6), (1,7)),LotteryTicket(List(1, 6, 5, 23, 45, 27),7)))
+    assert(result == (List((1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7)), LotteryTicket(List(1, 6, 5, 23, 45, 27), 7)))
 
 
     def getState[S]: State[S, S] = State(s => (s, s))
@@ -213,7 +213,7 @@ class MonadTest extends FunSuite {
     ) yield div(List(a))
 
     def article(): Reader[Context, HTML] = for (
-      w <- widget()
+      w <- widget2()
     ) yield div(List(
       p(List("This is an article")),
       w
@@ -224,6 +224,20 @@ class MonadTest extends FunSuite {
     ) yield div(List(
       p(List("Hey " + context.email + ", we've got a great offer for you!"))
     ))
+
+    // same as widget
+    def widget2(): Reader[Context, HTML] = new Reader[Context, HTML](context =>
+      div(List(
+        p(List("Hey " + context.email + ", we've got a great offer for you!"))
+      ))
+    )
+
+    // same as widget and widget 2
+    def widget3(): Reader[Context, HTML] = Reader.ask.map(context =>
+      div(List(
+        p(List("Hey " + context.email + ", we've got a great offer for you!"))
+      ))
+    )
 
     val result = view().run(Context("leopold.niklas@gmail.com"))
 
