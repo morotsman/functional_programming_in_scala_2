@@ -185,4 +185,10 @@ object Reader {
   def ask[R]: Reader[R, R] = Reader(r => r)
 }
 
+object StateMonad {
+  def getState[S]: State[S, S] = State(s => (s, s))
+
+  def setState[S](s: S): State[S, Unit] = State(_ => ((), s))
+}
+
 
