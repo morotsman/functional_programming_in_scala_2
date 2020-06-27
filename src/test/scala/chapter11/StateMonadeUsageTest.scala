@@ -32,17 +32,12 @@ class StateMonadeUsageTest extends FunSuite {
     assert(lotteryMonad.sequence(inputSeq).run(lotteryTicket)._2 == LotteryTicket(List(1, 6, 5, 23, 45, 27), 3))
     assert(lotteryMonad.sequence(inputSeq).run(lotteryTicket)._1 ==
       List((Number(1), 1), (Number(4), 1), (Number(29), 1), (Number(5), 2), (Number(27), 3), (Number(21), 3), (Number(34), 3)))
-
-    val result = lotteryMonad.replicateM(input.length, State((s: LotteryTicket) => {
-      val ticket = check(Number(1))(s)
-      ((1, ticket.numberOfMatches), ticket)
-    })).run(lotteryTicket)
-
-    assert(result == (List((1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7)), LotteryTicket(List(1, 6, 5, 23, 45, 27), 7)))
-
   }
 
   test("zipWithIndex") {
+    import StateMonad.getState
+    import StateMonad.setState
+
     val stateM = Monad.stateMonad[Int]
 
     def zipWithIndex[A](as: List[A]): List[(Int, A)] =
@@ -58,8 +53,8 @@ class StateMonadeUsageTest extends FunSuite {
       as.foldLeft(stateM.unit(List[(Int, A)]())) { (acc, a) =>
         for {
           xs <- acc
-          n <- StateMonad.getState
-          _ <- StateMonad.setState(n + 1)
+          n <- getState
+          _ <- setState(n + 1)
         } yield (n, a) :: xs
       }.run(0)._1.reverse
 
