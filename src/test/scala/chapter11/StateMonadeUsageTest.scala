@@ -6,7 +6,7 @@ import chapter8.{Gen, Prop}
 import org.scalatest.FunSuite
 
 
-class StateMonadeUsageTest extends FunSuite {
+class StateMonadUsageTest extends FunSuite {
 
   test("lottery") {
     case class Number(n: Int)
@@ -19,8 +19,8 @@ class StateMonadeUsageTest extends FunSuite {
       }
     }
 
-    val input = List(Number(1), Number(4), Number(29), Number(5), Number(27), Number(21), Number(34))
-    val inputSeq: List[State[LotteryTicket, (Number, Int)]] = input.map((i: Number) => State((s: LotteryTicket) => {
+    val luckyNumbers = List(Number(1), Number(4), Number(29), Number(5), Number(27), Number(21), Number(34))
+    val luckyNumbersSeq: List[State[LotteryTicket, (Number, Int)]] = luckyNumbers.map((i: Number) => State((s: LotteryTicket) => {
       val ticket = check(i)(s)
       ((i, ticket.numberOfMatches), ticket)
     }))
@@ -28,7 +28,7 @@ class StateMonadeUsageTest extends FunSuite {
     val lotteryTicket = LotteryTicket(List(1, 6, 5, 23, 45, 27), 0)
     val lotteryMonad = Monad.stateMonad[LotteryTicket]
 
-    val result = lotteryMonad.sequence(inputSeq).run(lotteryTicket)
+    val result = lotteryMonad.sequence(luckyNumbersSeq).run(lotteryTicket)
 
     assert(result._2 == LotteryTicket(List(1, 6, 5, 23, 45, 27), 3))
     assert(result._1 == List((Number(1), 1), (Number(4), 1), (Number(29), 1), (Number(5), 2), (Number(27), 3), (Number(21), 3), (Number(34), 3)))
