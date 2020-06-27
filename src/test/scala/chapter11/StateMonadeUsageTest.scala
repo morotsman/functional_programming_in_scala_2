@@ -9,11 +9,10 @@ import org.scalatest.FunSuite
 class StateMonadeUsageTest extends FunSuite {
 
   test("lottery") {
-    sealed trait Input
-    case class Number(n: Int) extends Input
+    case class Number(n: Int)
     case class LotteryTicket(ns: List[Int], numberOfMatches: Int)
 
-    def check: Input => LotteryTicket => LotteryTicket = (i: Input) => (l: LotteryTicket) => {
+    def check: Number => LotteryTicket => LotteryTicket = (i: Number) => (l: LotteryTicket) => {
       (i, l) match {
         case (Number(n), LotteryTicket(ns, numberOfMatches)) if ns.contains(n) => LotteryTicket(ns, numberOfMatches + 1)
         case _ => l
@@ -29,9 +28,10 @@ class StateMonadeUsageTest extends FunSuite {
     val lotteryTicket = LotteryTicket(List(1, 6, 5, 23, 45, 27), 0)
     val lotteryMonad = Monad.stateMonad[LotteryTicket]
 
-    assert(lotteryMonad.sequence(inputSeq).run(lotteryTicket)._2 == LotteryTicket(List(1, 6, 5, 23, 45, 27), 3))
-    assert(lotteryMonad.sequence(inputSeq).run(lotteryTicket)._1 ==
-      List((Number(1), 1), (Number(4), 1), (Number(29), 1), (Number(5), 2), (Number(27), 3), (Number(21), 3), (Number(34), 3)))
+    val result = lotteryMonad.sequence(inputSeq).run(lotteryTicket)
+
+    assert(result._2 == LotteryTicket(List(1, 6, 5, 23, 45, 27), 3))
+    assert(result._1 == List((Number(1), 1), (Number(4), 1), (Number(29), 1), (Number(5), 2), (Number(27), 3), (Number(21), 3), (Number(34), 3)))
   }
 
   test("zipWithIndex") {
