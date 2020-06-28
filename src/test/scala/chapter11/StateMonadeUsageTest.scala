@@ -109,9 +109,7 @@ class StateMonadUsageTest extends FunSuite {
     } yield n
 
     def rlabel2[A](a: Tree[A]): State[Int, Tree[Int]] = a match {
-      case Leaf(_) => for {
-        n <- fresh
-      } yield Leaf(n)
+      case Leaf(_) => fresh.map(Leaf(_))
       case Node(l, r) => for {
         l1 <- rlabel2(l)
         r1 <- rlabel2(r)
