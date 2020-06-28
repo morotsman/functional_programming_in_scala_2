@@ -81,4 +81,45 @@ class StateMonadUsageTest extends FunSuite {
     assert(zipWithIndex2(List("a", "b", "c")) == List((0, "a"), (1, "b"), (2, "c")))
   }
 
+  //translation of example given in Programming in Haskell by Graham Hutton on page 171
+  test("relabling tree") {
+    import StateMonad.getState
+    import StateMonad.setState
+
+    trait Tree[A]
+    case class Node[A](l: Tree[A], r: Tree[A]) extends Tree[A]
+    case class Leaf[A](a: A) extends Tree[A]
+
+    val tree = Node(Node(Leaf("a"), Leaf("b")), Leaf("c"))
+
+    def rlabel[A](a: Tree[A], acc: Int): (Tree[Int], Int) = a match {
+      case Leaf(_) => (Leaf(acc), acc + 1)
+      case Node(l, r) => {
+        val (l1, acc1) = rlabel(l, acc)
+        val (r1, acc2) = rlabel(r, acc1)
+        (Node(l1, r1), acc2)
+      }
+    }
+
+    assert(rlabel(tree, 0)._1 == Node(Node(Leaf(0),Leaf(1)),Leaf(2)))
+
+    def fresh: State[Int, Int] = for {
+      n <- getState
+      _ <- setState(n + 1)
+    } yield n
+
+    def rlabel2[A](a: Tree[A]): State[Int, Tree[Int]] = a match {
+      case Leaf(_) => for {
+        n <- fresh
+      } yield Leaf(n)
+      case Node(l, r) => for {
+        l1 <- rlabel2(l)
+        r1 <- rlabel2(r)
+      } yield Node(l1, r1)
+    }
+
+    assert(rlabel2(tree).run(0)._1 == Node(Node(Leaf(0),Leaf(1)),Leaf(2)))
+
+  }
+
 }
