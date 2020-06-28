@@ -1,5 +1,6 @@
 package chapter11
 
+import chapter11.StateMonad.{getState, setState}
 import chapter4.{None, Option, Some}
 import chapter6.State
 import chapter8.{Gen, Prop}
@@ -8,30 +9,47 @@ import org.scalatest.FunSuite
 
 class StateMonadUsageTest extends FunSuite {
 
+
+  test("calculate with state") {
+    def plus(value: Int): State[Int, Unit] = for {
+      state <- getState
+      _ <- setState(state + value)
+    } yield ()
+
+    def times(value: Int): State[Int, Unit] = for {
+      state <- getState
+      _ <- setState(state * value)
+    } yield ()
+
+    val result = for {
+      _ <- plus(1)
+      _ <- plus(1)
+      _ <- times(4)
+    } yield ()
+
+    assert(result.run(1) == ((), 12))
+  }
+
+  type Number = Int
+  type WinningNumbers = List[Number]
+  type MatchingNumbers = List[Number]
+
   test("lottery") {
-    case class Number(n: Int)
-    case class LotteryTicket(ns: List[Int], numberOfMatches: Int)
+    case class LotteryState(matchingNumbers: MatchingNumbers, winningNumbers: WinningNumbers)
+    val lotteryMonad = Monad.stateMonad[LotteryState]
 
-    def check: Number => LotteryTicket => LotteryTicket = (i: Number) => (l: LotteryTicket) => {
-      (i, l) match {
-        case (Number(n), LotteryTicket(ns, numberOfMatches)) if ns.contains(n) => LotteryTicket(ns, numberOfMatches + 1)
-        case _ => l
-      }
-    }
+    def checkNumber(lotteryNumber: Number): State[LotteryState, Unit] =
+      for {
+        s <- getState
+        _ <- setState(if (s.winningNumbers.contains(lotteryNumber)) s.copy(matchingNumbers = lotteryNumber :: s.matchingNumbers) else s)
+      } yield ()
 
-    val luckyNumbers = List(Number(1), Number(4), Number(29), Number(5), Number(27), Number(21), Number(34))
-    val luckyNumbersSeq: List[State[LotteryTicket, (Number, Int)]] = luckyNumbers.map((i: Number) => State((s: LotteryTicket) => {
-      val ticket = check(i)(s)
-      ((i, ticket.numberOfMatches), ticket)
-    }))
+    def checkTicket(ticket: List[Number], winningNumbers: WinningNumbers): MatchingNumbers =
+      lotteryMonad.sequence(ticket.map(checkNumber)).run(LotteryState(List(), winningNumbers))._2.matchingNumbers
 
-    val lotteryTicket = LotteryTicket(List(1, 6, 5, 23, 45, 27), 0)
-    val lotteryMonad = Monad.stateMonad[LotteryTicket]
-
-    val result = lotteryMonad.sequence(luckyNumbersSeq).run(lotteryTicket)
-
-    assert(result._2 == LotteryTicket(List(1, 6, 5, 23, 45, 27), 3))
-    assert(result._1 == List((Number(1), 1), (Number(4), 1), (Number(29), 1), (Number(5), 2), (Number(27), 3), (Number(21), 3), (Number(34), 3)))
+    val ticket = List[Number](1, 5, 4, 34, 44, 15, 19)
+    val winningNumbers: WinningNumbers = List(1, 4, 29, 5, 27, 21, 34)
+    assert(checkTicket(ticket, winningNumbers) == List(34, 4, 5, 1))
   }
 
   test("zipWithIndex") {
